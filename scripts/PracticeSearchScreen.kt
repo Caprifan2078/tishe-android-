@@ -14,18 +14,30 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /** Fast searchable directory; only visible cards are composed. */
 @Composable
-internal fun PracticeSearchScreen(modifier: Modifier, onStart: (String, Emotion) -> Unit) {
+internal fun PracticeSearchScreen(
+    modifier: Modifier,
+    favorites: List<String>,
+    onToggleFavorite: (String) -> Unit,
+    onStart: (String, Emotion) -> Unit
+) {
     var search by rememberSaveable { mutableStateOf("") }
     var emotionId by rememberSaveable { mutableStateOf("") }
     var shortOnly by rememberSaveable { mutableStateOf(false) }
+    var favoritesOnly by rememberSaveable { mutableStateOf(false) }
     val emotion = Emotion.fromId(emotionId)
-    val results = remember(search, emotion, shortOnly) { PracticeIndex.search(search, emotion, shortOnly) }
+    val results = remember(search, emotion, shortOnly, favoritesOnly, favorites) {
+        PracticeIndex.search(search, emotion, shortOnly)
+            .filter { !favoritesOnly || it.route in favorites }
+            .sortedByDescending { it.route in favorites }
+    }
     val listState = rememberLazyListState()
     LaunchedEffect(search, emotionId, shortOnly) { listState.scrollToItem(0) }
 
@@ -37,7 +49,7 @@ internal fun PracticeSearchScreen(modifier: Modifier, onStart: (String, Emotion)
     ) {
         item {
             SectionHeading("Без спешки", "Практики и мини-игры",
-                "Найди занятие по чувству или названию. Можно пропустить любое упражнение.")
+                "Найди занятие по чувству, сохрани любимые ★. Любое упражнение можно пропустить.")
         }
         item {
             OutlinedTextField(
@@ -65,8 +77,15 @@ internal fun PracticeSearchScreen(modifier: Modifier, onStart: (String, Emotion)
             }
         }
         item {
-            FilterChip(selected = shortOnly, onClick = { shortOnly = !shortOnly },
-                label = { Text("Простые короткие практики") })
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(selected = shortOnly, onClick = { shortOnly = !shortOnly },
+                    label = { Text("Короткие") })
+                FilterChip(selected = favoritesOnly, onClick = { favoritesOnly = !favoritesOnly },
+                    label = { Text("★ Избранное (" + favorites.size + ")") })
+            }
             Text("Найдено: " + results.size + ". Никаких баллов и обязательного результата.",
                 color = Muted, fontSize = 12.sp)
         }
@@ -77,7 +96,7 @@ internal fun PracticeSearchScreen(modifier: Modifier, onStart: (String, Emotion)
                     Spacer(Modifier.height(6.dp))
                     Text("Можно убрать один из фильтров и выбрать что-нибудь другое.", color = Muted)
                     Spacer(Modifier.height(12.dp))
-                    OutlinedButton(onClick = { search = ""; emotionId = ""; shortOnly = false }) {
+                    OutlinedButton(onClick = { search = ""; emotionId = ""; shortOnly = false; favoritesOnly = false }) {
                         Text("Показать все практики")
                     }
                 }
@@ -92,7 +111,20 @@ internal fun PracticeSearchScreen(modifier: Modifier, onStart: (String, Emotion)
                 border = BorderStroke(1.dp, PanelAlt)
             ) {
                 Column(Modifier.padding(17.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(option.title, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Text(option.title, fontSize = 17.sp, fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f))
+                        IconButton(onClick = { onToggleFavorite(option.route) }) {
+                            Text(if (option.route in favorites) "★" else "☆",
+                                fontSize = 25.sp,
+                                color = if (option.route in favorites) Mint else Muted,
+                                modifier = Modifier.semantics {
+                                    contentDescription = if (option.route in favorites)
+                                        "Убрать из избранного: " + option.title
+                                    else "Добавить в избранное: " + option.title
+                                })
+                        }
+                    }
                     Text(option.description, color = Muted, fontSize = 13.sp)
                     Text("Начать →", color = Accent, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                 }
