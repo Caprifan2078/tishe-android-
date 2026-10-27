@@ -116,16 +116,29 @@ for old, new in [
     ("0xFF9BE8D4", "0xFFA8EAD6"), ("0xFFBDCBD8", "0xFFB4C4D5")
 ]:
     change(old, new)
-# Avoid Compose Lint ProduceStateDoesNotAssignValue false negative on value = try.
-change('''        value = try {
-            StartupState.Ready(withContext(Dispatchers.IO) {''', '''        val resolvedStartup: StartupState = try {
-            StartupState.Ready(withContext(Dispatchers.IO) {''')
-change('''        } catch (_: Exception) { StartupState.Failed }
-    }
-    MaterialTheme''', '''        } catch (_: Exception) { StartupState.Failed }
-        value = resolvedStartup
-    }
-    MaterialTheme''')
+# Use a simple LaunchedEffect instead of produceState to avoid its Lint issue.
+change('''    val startup by produceState<StartupState>(StartupState.Loading, store, retryNumber) {
+        value = try {
+            StartupState.Ready(withContext(Dispatchers.IO) {
+                StartupSnapshot(
+                    store.loadCheckIn(), store.loadDiary(), store.loadAssessment(),
+                    store.loadCompassHistory(), store.loadSelfKnowledge()
+                )
+            })
+        } catch (_: Exception) { StartupState.Failed }
+    }''', '''    var startup by remember(store) { mutableStateOf<StartupState>(StartupState.Loading) }
+    LaunchedEffect(store, retryNumber) {
+        startup = StartupState.Loading
+        val loaded: StartupState = try {
+            StartupState.Ready(withContext(Dispatchers.IO) {
+                StartupSnapshot(
+                    store.loadCheckIn(), store.loadDiary(), store.loadAssessment(),
+                    store.loadCompassHistory(), store.loadSelfKnowledge()
+                )
+            })
+        } catch (_: Exception) { StartupState.Failed }
+        startup = loaded
+    }''')
 ui.write_text(s, encoding="utf-8")
 
 design=Path("app/src/main/java/ru/tishe/app/CalmDesign.kt")
@@ -146,7 +159,7 @@ design.write_text(d,encoding="utf-8")
 gradle=Path("app/build.gradle.kts")
 g=gradle.read_text(encoding="utf-8")
 if "versionCode = 18" not in g: raise RuntimeError("Unexpected versionCode")
-gradle.write_text(g.replace("versionCode = 18","versionCode = 21").replace('versionName = "0.14.4"', 'versionName = "0.15.2"'),encoding="utf-8")
+gradle.write_text(g.replace("versionCode = 18","versionCode = 22").replace('versionName = "0.14.4"', 'versionName = "0.15.3"'),encoding="utf-8")
 assert "else if (check == null)" not in s
 assert "else if (onboardingOpen)" in s
 assert "check ?: CheckIn(emptySet(), 2, 2, SupportFormat.VISUAL)" in s
@@ -155,4 +168,4 @@ style_text = style_file.read_text(encoding="utf-8")
 obsolete = '<item name="android:windowLightNavigationBar">false</item>'
 if obsolete not in style_text: raise RuntimeError("Unexpected theme XML")
 style_file.write_text(style_text.replace(obsolete, ""), encoding="utf-8")
-print("Tishe v0.15.2: opt-in onboarding, refreshed UI, Android 8 theme fix")
+print("Tishe v0.15.3: opt-in onboarding, refreshed UI, Android 8 theme fix")
