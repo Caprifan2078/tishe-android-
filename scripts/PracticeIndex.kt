@@ -42,11 +42,17 @@ internal object PracticeIndex {
 
     fun search(query: String, emotion: Emotion?, shortOnly: Boolean): List<PracticeOption> {
         val term = query.trim().lowercase(Locale.ROOT)
+        // Common Russian noun endings should not hide useful exercises
+        // (e.g. "границы" should find "Мастерская границ").
+        val stem = if (term.length >= 5 && term.last() in "ыияеоу") term.dropLast(1) else term
         return all.filter { item ->
             (!shortOnly || item.short) &&
             (emotion == null || item.emotion == emotion) &&
             (term.isEmpty() || listOf(item.title,item.description,item.emotion.title)
-                .any { it.lowercase(Locale.ROOT).contains(term) })
+                .any { field ->
+                    val searchable = field.lowercase(Locale.ROOT)
+                    searchable.contains(term) || searchable.contains(stem)
+                })
         }
     }
 }
