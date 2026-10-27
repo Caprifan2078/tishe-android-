@@ -10,6 +10,9 @@ on:
       - 'scripts/apply-v016.py'
       - 'scripts/apply-v017.py'
       - 'scripts/apply-v018.py'
+      - 'scripts/apply-v019.py'
+      - 'scripts/DiaryEditPolicy.kt'
+      - 'scripts/DiaryEditPolicyTest.kt'
       - 'scripts/DiaryHistoryFilter.kt'
       - 'scripts/DiaryHistoryFilterTest.kt'
       - 'scripts/PracticeFavoritesPolicy.kt'
@@ -44,6 +47,8 @@ jobs:
         run: python3 scripts/apply-v017.py
       - name: Add local diary search and filters
         run: python3 scripts/apply-v018.py
+      - name: Add safe diary entry editing
+        run: python3 scripts/apply-v019.py
       - name: Make preview installable alongside older debug builds
         shell: bash
         run: |
