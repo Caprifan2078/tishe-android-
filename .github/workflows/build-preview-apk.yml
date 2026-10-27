@@ -1,0 +1,92 @@
+name: Build Tishe Preview APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'project-source.b64'
+      - '.github/workflows/build-preview-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-android-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore Tishe source
+        shell: bash
+        run: |
+          set -euo pipefail
+          base64 --decode project-source.b64 > /tmp/tishe-project.zip
+          unzip -t /tmp/tishe-project.zip
+          unzip -oq /tmp/tishe-project.zip -d .
+          test -f app/build.gradle.kts
+          test -f settings.gradle.kts
+      - name: Apply clear start-screen redesign
+        run: python3 scripts/apply-redesign-v015.py
+      - name: Make preview installable alongside older debug builds
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("app/build.gradle.kts")
+          s = p.read_text()
+          old = '    buildTypes {\n        release { isMinifyEnabled = false }\n    }'
+          assert old in s, "Unknown Android Gradle buildTypes layout"
+          s = s.replace(old, '    buildTypes {\n        debug { applicationIdSuffix = ".preview" }\n        release { isMinifyEnabled = false }\n    }', 1)
+          p.write_text(s)
+          m = Path("app/src/main/AndroidManifest.xml")
+          manifest = m.read_text()
+          assert 'android:name=".MainActivity"' in manifest
+          m.write_text(manifest.replace('android:name=".MainActivity"', 'android:name="ru.tishe.app.MainActivity"').replace('android:label="Тише"', 'android:label="Тише (тест)"'))
+          PY
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Install Android SDK packages using runner SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Preinstalled SDK: $ANDROID_HOME"
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Compile debug Android APK
+        shell: bash
+        run: |
+          set -o pipefail
+          gradle --no-daemon --stacktrace :app:assembleDebug 2>&1 | tee build.log
+      - name: Run unit tests and lint
+        continue-on-error: true
+        run: gradle --no-daemon --stacktrace :app:testDebugUnitTest :app:lintDebug
+      - name: Check APK metadata
+        run: |
+          set -euo pipefail
+          APK=app/build/outputs/apk/debug/app-debug.apk
+          test -s "$APK"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | tee apk-metadata.txt
+          grep -F "package: name='ru.tishe.app.preview'" apk-metadata.txt
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tishe-Android-preview-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload diagnostics even after failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tishe-build-diagnostics
+          path: |
+            build.log
+            apk-metadata.txt
+            app/build/reports/
+          if-no-files-found: ignore
+          retention-days: 14
