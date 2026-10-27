@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'project-source.b64'
+      - 'scripts/apply-redesign-v015.py'
       - '.github/workflows/build-apk.yml'
   workflow_dispatch:
 
@@ -47,7 +48,6 @@ jobs:
           set -o pipefail
           gradle --no-daemon --stacktrace :app:assembleDebug 2>&1 | tee build.log
       - name: Run unit tests and lint
-        continue-on-error: true
         run: gradle --no-daemon --stacktrace :app:testDebugUnitTest :app:lintDebug
       - name: Check APK metadata
         run: |
