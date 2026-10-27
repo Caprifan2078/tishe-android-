@@ -9,6 +9,9 @@ on:
       - 'scripts/PracticeIndex.kt'
       - 'scripts/apply-v016.py'
       - 'scripts/apply-v017.py'
+      - 'scripts/apply-v018.py'
+      - 'scripts/DiaryHistoryFilter.kt'
+      - 'scripts/DiaryHistoryFilterTest.kt'
       - 'scripts/PracticeFavoritesPolicy.kt'
       - 'scripts/PracticeFavoritesPolicyTest.kt'
       - 'scripts/apply-redesign-v015.py'
@@ -39,6 +42,8 @@ jobs:
         run: python3 scripts/apply-v016.py
       - name: Add encrypted favorites and navigation improvements
         run: python3 scripts/apply-v017.py
+      - name: Add local diary search and filters
+        run: python3 scripts/apply-v018.py
       - name: Make preview installable alongside older debug builds
         shell: bash
         run: |
