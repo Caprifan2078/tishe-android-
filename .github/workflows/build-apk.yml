@@ -4,6 +4,10 @@ on:
     branches: [main]
     paths:
       - 'project-source.b64'
+      - 'scripts/PracticeSearchTest.kt'
+      - 'scripts/PracticeSearchScreen.kt'
+      - 'scripts/PracticeIndex.kt'
+      - 'scripts/apply-v016.py'
       - 'scripts/apply-redesign-v015.py'
       - '.github/workflows/build-apk.yml'
   workflow_dispatch:
@@ -28,6 +32,8 @@ jobs:
           test -f settings.gradle.kts
       - name: Apply clear start-screen redesign
         run: python3 scripts/apply-redesign-v015.py
+      - name: Apply searchable practices update
+        run: python3 scripts/apply-v016.py
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
