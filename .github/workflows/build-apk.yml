@@ -1,24 +1,28 @@
-name: Build Tishe APK
+name: Build Tishe Android APK
 on:
-  workflow_dispatch:
   push:
+    branches: [main]
     paths:
-      - 'source.zip'
+      - 'project-source.b64'
+      - '.github/workflows/build-apk.yml'
+  workflow_dispatch:
+
 permissions:
   contents: read
+
 jobs:
-  build:
+  build-android-apk:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - name: Verify project source archive
+      - name: Restore Tishe source
         shell: bash
         run: |
           set -euo pipefail
-          test -s source.zip
-          unzip -t source.zip
-          unzip -q -o source.zip -d .
+          base64 --decode project-source.b64 > /tmp/tishe-project.zip
+          unzip -t /tmp/tishe-project.zip
+          unzip -oq /tmp/tishe-project.zip -d .
           test -f app/build.gradle.kts
           test -f settings.gradle.kts
       - uses: actions/setup-java@v4
@@ -29,10 +33,13 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
-      - name: Install Android platform
+      - name: Install Android SDK
         run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
       - name: Compile debug Android APK
-        run: gradle --no-daemon --stacktrace :app:assembleDebug
+        shell: bash
+        run: |
+          set -o pipefail
+          gradle --no-daemon --stacktrace :app:assembleDebug 2>&1 | tee build.log
       - name: Run unit tests and lint
         continue-on-error: true
         run: gradle --no-daemon --stacktrace :app:testDebugUnitTest :app:lintDebug
@@ -43,20 +50,21 @@ jobs:
           test -s "$APK"
           "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | tee apk-metadata.txt
           grep -F "package: name='ru.tishe.app'" apk-metadata.txt
-      - name: Upload installable debug APK
+      - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: tishe-debug-apk
+          name: Tishe-Android-debug-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
-      - name: Upload logs
+      - name: Upload diagnostics even after failure
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: tishe-build-reports
+          name: Tishe-build-diagnostics
           path: |
-            app/build/reports/
+            build.log
             apk-metadata.txt
+            app/build/reports/
           if-no-files-found: ignore
           retention-days: 14
