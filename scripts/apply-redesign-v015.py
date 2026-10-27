@@ -136,8 +136,13 @@ design.write_text(d,encoding="utf-8")
 gradle=Path("app/build.gradle.kts")
 g=gradle.read_text(encoding="utf-8")
 if "versionCode = 18" not in g: raise RuntimeError("Unexpected versionCode")
-gradle.write_text(g.replace("versionCode = 18","versionCode = 19").replace('versionName = "0.14.4"', 'versionName = "0.15.0"'),encoding="utf-8")
+gradle.write_text(g.replace("versionCode = 18","versionCode = 20").replace('versionName = "0.14.4"', 'versionName = "0.15.1"'),encoding="utf-8")
 assert "else if (check == null)" not in s
 assert "else if (onboardingOpen)" in s
 assert "check ?: CheckIn(emptySet(), 2, 2, SupportFormat.VISUAL)" in s
-print("Tishe v0.15.0: optional setup, new homepage, shortcuts, typography")
+style_file = Path("app/src/main/res/values/styles.xml")
+style_text = style_file.read_text(encoding="utf-8")
+obsolete = '<item name="android:windowLightNavigationBar">false</item>'
+if obsolete not in style_text: raise RuntimeError("Unexpected theme XML")
+style_file.write_text(style_text.replace(obsolete, ""), encoding="utf-8")
+print("Tishe v0.15.1: opt-in onboarding, refreshed UI, Android 8 theme fix")
