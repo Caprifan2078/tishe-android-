@@ -1,0 +1,56 @@
+name: Export complete Tishe source for migration
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/export-complete-source.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore original source
+        shell: bash
+        run: |
+          set -euo pipefail
+          base64 --decode project-source.b64 > /tmp/tishe-base.zip
+          unzip -t /tmp/tishe-base.zip
+          unzip -oq /tmp/tishe-base.zip -d .
+          test -f app/build.gradle.kts
+          test -f settings.gradle.kts
+      - name: Apply all changes through 0.19.0
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/apply-redesign-v015.py
+          python3 scripts/apply-v016.py
+          python3 scripts/apply-v017.py
+          python3 scripts/apply-v018.py
+          python3 scripts/apply-v019.py
+          grep -F 'versionName = "0.19.0"' app/build.gradle.kts
+          grep -F 'versionCode = 26' app/build.gradle.kts
+          test -f app/src/main/java/ru/tishe/app/DiaryEditPolicy.kt
+          test -f app/src/main/java/ru/tishe/app/DiaryHistoryFilter.kt
+          test -f app/src/main/java/ru/tishe/app/PracticeFavoritesPolicy.kt
+      - name: Check for machine-local state and export
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -f local.properties
+          test ! -d app/build
+          mkdir -p export
+          zip -qr export/Tishe-Android-v0.19.0-complete-source.zip app scripts .github README.md BUILD_APK_RU.md settings.gradle.kts build.gradle.kts gradle.properties .gitignore
+          unzip -t export/Tishe-Android-v0.19.0-complete-source.zip
+          sha256sum export/Tishe-Android-v0.19.0-complete-source.zip | tee export/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Tishe-v0.19.0-FULL-SOURCE
+          path: export/
+          if-no-files-found: error
+          retention-days: 14
