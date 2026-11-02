@@ -13,6 +13,10 @@ on:
       - 'scripts/apply-v019.py'
       - 'scripts/apply-v020.py'
       - 'scripts/apply-v021.py'
+      - 'scripts/apply-v022.py'
+      - 'scripts/SuperCompassSignals.kt'
+      - 'scripts/SuperCompassSignalsTest.kt'
+      - 'scripts/SuperCompassOverview.kt'
       - 'scripts/AssessmentAnswerSummary.kt'
       - 'scripts/AssessmentAnswerSummaryTest.kt'
       - 'scripts/AssessmentResultsUi.kt'
@@ -60,6 +64,8 @@ jobs:
         run: python3 scripts/apply-v020.py
       - name: Calculate and show first 40 questionnaire scales
         run: python3 scripts/apply-v021.py
+      - name: Integrate all feelings and explainable reflection themes
+        run: python3 scripts/apply-v022.py
       - name: Make preview installable alongside older debug builds
         shell: bash
         run: |
