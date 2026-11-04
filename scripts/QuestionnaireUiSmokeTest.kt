@@ -4,6 +4,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
@@ -55,10 +56,10 @@ class QuestionnaireUiSmokeTest {
         for (level in JourneyLevel.entries) {
             compose.runOnIdle { mode.value = level }
             compose.onNodeWithText("Твои результаты").assertExists()
+            compose.onNodeWithText(level.title, substring = true).assertExists()
             compose.onNodeWithTag("journey_result_list")
                 .performScrollToNode(hasText("Итог теста"))
             compose.onNodeWithText("Итог теста").assertIsDisplayed()
-            compose.onNodeWithText(level.title, substring = true).assertExists()
         }
     }
 
@@ -99,6 +100,38 @@ class QuestionnaireUiSmokeTest {
         compose.onNodeWithText("Результат опроса").assertDoesNotExist()
         compose.onNodeWithText("Мне 18 или больше, продолжить").performClick()
         compose.onNodeWithText("Результат опроса").assertExists()
-        compose.onNodeWithText("PHQ-4: краткий скрининг").assertExists()
+        compose.onNodeWithText("По PHQ-4", substring = true).assertExists()
+    }
+}
+
+
+/** End-to-end from real MainActivity through encrypted local assessment persistence. */
+@RunWith(AndroidJUnit4::class)
+class TisheEncryptedAssessmentNavigationTest {
+    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+
+    private fun openShortJourney() {
+        compose.waitUntil(30000L) {
+            compose.onAllNodesWithTag("nav_profile").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("nav_profile").performClick()
+        compose.onNodeWithText("Твоя карта состояний").assertExists()
+        compose.onNodeWithTag("profile_test_list")
+            .performScrollToNode(hasText("Начальный · 40"))
+        compose.onNodeWithText("Начальный · 40").performClick()
+    }
+
+    @Test fun realSavedAnswerSurvivesActivityRecreation() {
+        openShortJourney()
+        compose.onNodeWithText("Отвечено: 0/40", substring = true).assertExists()
+        compose.onNodeWithText("Часто").performClick()
+        compose.onNodeWithText("Отвечено: 1/40", substring = true).assertExists()
+        compose.waitForIdle()
+        // MainActivity recreation reloads the encrypted source of truth.
+        compose.activityRule.scenario.recreate()
+        openShortJourney()
+        compose.onNodeWithText("Отвечено: 1/40", substring = true).assertExists()
+        compose.onNodeWithText("Мои результаты").performClick()
+        compose.onNodeWithText("Твои результаты").assertExists()
     }
 }
