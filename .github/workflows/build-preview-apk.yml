@@ -1,7 +1,7 @@
-name: Build Tishe v0.22 standalone Super Compass APK
+name: Build Tishe v0.23 questionnaire results QA APK
 on:
   push:
-    branches: [main]
+    branches: [main, 'qa/**']
     paths:
       - 'project-source.b64'
       - 'scripts/PracticeSearchTest.kt'
@@ -14,6 +14,10 @@ on:
       - 'scripts/apply-v020.py'
       - 'scripts/apply-v021.py'
       - 'scripts/apply-v022.py'
+      - 'scripts/apply-v023.py'
+      - 'scripts/JourneyReportEngine.kt'
+      - 'scripts/JourneyReportUi.kt'
+      - 'scripts/JourneyReportEngineTest.kt'
       - 'scripts/SuperCompassSignals.kt'
       - 'scripts/SuperCompassSignalsTest.kt'
       - 'scripts/SuperCompassOverview.kt'
@@ -66,6 +70,8 @@ jobs:
         run: python3 scripts/apply-v021.py
       - name: Integrate all feelings and explainable reflection themes
         run: python3 scripts/apply-v022.py
+      - name: Explain outcomes of all questionnaires (40/150/300/500)
+        run: python3 scripts/apply-v023.py
       - name: Make preview installable alongside older debug builds
         shell: bash
         run: |
@@ -75,7 +81,7 @@ jobs:
           s = p.read_text()
           old = '    buildTypes {\n        release { isMinifyEnabled = false }\n    }'
           assert old in s, "Unknown Android Gradle buildTypes layout"
-          s = s.replace(old, '    buildTypes {\n        debug { applicationIdSuffix = ".super22" }\n        release { isMinifyEnabled = false }\n    }', 1)
+          s = s.replace(old, '    buildTypes {\n        debug { applicationIdSuffix = ".results23" }\n        release { isMinifyEnabled = false }\n    }', 1)
           p.write_text(s)
           m = Path("app/src/main/AndroidManifest.xml")
           manifest = m.read_text()
@@ -109,11 +115,11 @@ jobs:
           APK=app/build/outputs/apk/debug/app-debug.apk
           test -s "$APK"
           "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | tee apk-metadata.txt
-          grep -F "package: name='ru.tishe.app.super22'" apk-metadata.txt
+          grep -F "package: name='ru.tishe.app.results23'" apk-metadata.txt
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: Tishe-Android-v022-parallel-APK
+          name: Tishe-Android-v023-results23-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
