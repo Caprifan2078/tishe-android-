@@ -23,6 +23,24 @@ if text.count(before) != 1:
     raise RuntimeError("Unexpected questionnaire cursor implementation: " + str(text.count(before)))
 ui.write_text(text.replace(before, after), encoding="utf-8")
 
+# Preserve the *parent* navigation destination too. Saving only the child question
+# index is ineffective if Activity recreation replaces the entire survey with Home.
+app_ui = root / "AppUi.kt"
+app = app_ui.read_text(encoding="utf-8")
+for original, replacement in [
+    ('var survey by remember { mutableStateOf<String?>(null) }',
+     'var survey by rememberSaveable { mutableStateOf<String?>(null) }'),
+    ('var journey by remember { mutableStateOf<JourneyLevel?>(null) }',
+     'var journey by rememberSaveable { mutableStateOf<JourneyLevel?>(null) }'),
+    ('var page by remember { mutableStateOf(Page.HOME) }',
+     'var page by rememberSaveable { mutableStateOf(Page.HOME) }'),
+]:
+    if app.count(original) != 1:
+        raise RuntimeError("Unexpected route state: " + original)
+    app = app.replace(original, replacement)
+app_ui.write_text(app, encoding="utf-8")
+
+
 dest = tests / "AssessmentResumePositionTest.kt"
 if dest.exists(): raise RuntimeError("Resume tests already installed")
 shutil.copyfile("scripts/AssessmentResumePositionTest.kt", dest)
