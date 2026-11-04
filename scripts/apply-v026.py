@@ -29,7 +29,7 @@ for filename in ("JourneyUi.kt", "AssessmentUi.kt"):
     if source.count(import_line) != 1:
         raise RuntimeError("Expected saveable import in " + filename)
     source = source.replace(import_line,
-        import_line + "\\nimport androidx.activity.compose.BackHandler", 1)
+        import_line + "\nimport androidx.activity.compose.BackHandler", 1)
     target.write_text(source, encoding="utf-8")
 
 exact("JourneyUi.kt",
@@ -40,8 +40,8 @@ exact("JourneyUi.kt",
         mutableStateOf(AssessmentResultEntryPolicy.completedJourney(level, answers))
     }''')
 exact("JourneyUi.kt",
-    '    if (showResults) {\\n        JourneyReportScreen(',
-    '    if (showResults) {\\n        BackHandler { showResults = false }\\n        JourneyReportScreen(')
+    '    if (showResults) {\n        JourneyReportScreen(',
+    '    if (showResults) {\n        BackHandler { showResults = false }\n        JourneyReportScreen(')
 
 
 exact("AssessmentUi.kt",
@@ -51,8 +51,8 @@ exact("AssessmentUi.kt",
         mutableStateOf(AssessmentResultEntryPolicy.completedModule(module, answers))
     }''')
 exact("AssessmentUi.kt",
-    '    if (showResults) {\\n        SingleSurveyReportScreen(',
-    '    if (showResults) {\\n        BackHandler { showResults = false }\\n        SingleSurveyReportScreen(')
+    '    if (showResults) {\n        SingleSurveyReportScreen(',
+    '    if (showResults) {\n        BackHandler { showResults = false }\n        SingleSurveyReportScreen(')
 
 
 exact("AssessmentUi.kt",
