@@ -65,6 +65,25 @@ class DirectTestConclusionEngineTest {
         val full = DirectTestConclusionEngine.single(m, m.questions.associate { it.id to 4 })
         assertTrue(full.headline.contains("По вашим ответам") || full.headline.contains("неоднозначное"))
     }
+    @Test fun recoveryProblemsAreNotIgnoredByFortyQuestionTest() {
+        val baseline = AssessmentJourney.questions(JourneyLevel.START).associate { it.question.id to 0 }
+        val withRecoveryIssues = baseline +
+            mapOf("resources.1" to 4, "resources.2" to 4, "resources.3" to 4)
+        val outcome = DirectTestConclusionEngine.journey(JourneyLevel.START, withRecoveryIssues)
+        assertTrue(outcome.headline.contains("восстановлением"))
+        assertTrue(outcome.explanation.contains("3 из 6"))
+        assertTrue(outcome.nextStep.contains("отдыха"))
+    }
+
+    @Test fun personalInterestsCountInInitialTestWithoutBecomingProblems() {
+        val baseline = AssessmentJourney.questions(JourneyLevel.START).associate { it.question.id to 0 }
+        val chosen = baseline + mapOf("values.1" to 4, "values.4" to 4)
+        val outcome = DirectTestConclusionEngine.journey(JourneyLevel.START, chosen)
+        assertTrue(outcome.headline.contains("не отметили частых трудностей"))
+        assertTrue(outcome.specifics.any { it.contains("Вам близки") &&
+            it.contains("природу") && it.contains("новое") })
+    }
+
     @Test fun previousAnswersRemainUntouched() {
         val answers = AssessmentJourney.questions(JourneyLevel.DEEP).associate { it.question.id to 2 }.toMutableMap()
         val snapshot = answers.toMap()
