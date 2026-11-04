@@ -128,11 +128,32 @@ class TisheEncryptedAssessmentNavigationTest {
         compose.onNodeWithText("Часто").performClick()
         compose.onNodeWithText("Отвечено: 1/40", substring = true).assertExists()
         compose.waitForIdle()
-        // MainActivity recreation reloads the encrypted source of truth.
+        // MainActivity recreation must restore both the encrypted answer and route.
         compose.activityRule.scenario.recreate()
-        openShortJourney()
-        compose.onNodeWithText("Отвечено: 1/40", substring = true).assertExists()
+        compose.waitUntil(30000L) {
+            compose.onAllNodesWithText("Отвечено: 1/40", substring = true)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText("вопрос 1 из 40", substring = true).assertExists()
         compose.onNodeWithText("Мои результаты").performClick()
         compose.onNodeWithText("Твои результаты").assertExists()
+    }
+
+    @Test fun standaloneQuestionPositionSurvivesActivityRecreation() {
+        compose.waitUntil(30000L) {
+            compose.onAllNodesWithTag("nav_profile").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("nav_profile").performClick()
+        compose.onNodeWithTag("profile_test_list")
+            .performScrollToNode(hasText("Раздражение и гнев"))
+        compose.onNodeWithText("Раздражение и гнев").performClick()
+        compose.onNodeWithText("вопрос 1 из 4", substring = true).assertExists()
+        compose.onNodeWithText("Дальше").performClick()
+        compose.onNodeWithText("вопрос 2 из 4", substring = true).assertExists()
+        compose.activityRule.scenario.recreate()
+        compose.waitUntil(30000L) {
+            compose.onAllNodesWithText("вопрос 2 из 4", substring = true)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
     }
 }
