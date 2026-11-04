@@ -32,6 +32,29 @@ code = code.replace(needle,
                     '        Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().testTag("journey_result_list"),', 1)
 ui.write_text(code, encoding="utf-8")
 
+# Deterministic semantic anchors for a real end-to-end encrypted-answer smoke check.
+app_ui = Path("app/src/main/java/ru/tishe/app/AppUi.kt")
+app = app_ui.read_text(encoding="utf-8")
+imp = "import androidx.compose.ui.Modifier"
+if app.count(imp) != 1: raise RuntimeError("AppUi import mismatch")
+app = app.replace(imp, imp + '\nimport androidx.compose.ui.platform.testTag')
+nav = "                                NavigationBarItem(\n                                    selected = page == target,"
+if app.count(nav) != 1: raise RuntimeError("Bottom navigation anchor mismatch")
+app = app.replace(nav, '''                                NavigationBarItem(
+                                    modifier = Modifier.testTag("nav_${target.name.lowercase()}"),
+                                    selected = page == target,''')
+app_ui.write_text(app, encoding="utf-8")
+
+assessment_ui = Path("app/src/main/java/ru/tishe/app/AssessmentUi.kt")
+a = assessment_ui.read_text(encoding="utf-8")
+if a.count(imp) != 1: raise RuntimeError("AssessmentUi import mismatch")
+a = a.replace(imp, imp + '\nimport androidx.compose.ui.platform.testTag')
+profile = "modifier = modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp),"
+if a.count(profile) != 1: raise RuntimeError("Profile LazyColumn anchor mismatch")
+a = a.replace(profile, 'modifier = modifier.fillMaxSize().testTag("profile_test_list"), contentPadding = PaddingValues(20.dp),')
+assessment_ui.write_text(a, encoding="utf-8")
+
+
 # This is a QA-only test extension, not a new consumer release.
 assert target.stat().st_size > 2000
-print("Installed Android Compose instrumentation smoke tests + non-invasive list tag.")
+print("Installed Android Compose instrumented tests plus stable navigation semantics for encrypted-answer E2E check.")
