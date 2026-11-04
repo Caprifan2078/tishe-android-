@@ -1,4 +1,4 @@
-name: Build Tishe v0.25 direct questionnaire conclusions APK
+name: Build Tishe v0.26 QA result reopening APK
 on:
   push:
     branches: [main, 'qa/**']
@@ -17,6 +17,9 @@ on:
       - 'scripts/apply-v023.py'
       - 'scripts/apply-v024.py'
       - 'scripts/apply-v025.py'
+      - 'scripts/apply-v026.py'
+      - 'scripts/AssessmentResultEntryPolicy.kt'
+      - 'scripts/AssessmentResultEntryPolicyTest.kt'
       - 'scripts/DirectTestConclusionEngine.kt'
       - 'scripts/DirectTestConclusionEngineTest.kt'
       - 'scripts/QuestionnaireNarrativeEngine.kt'
@@ -83,6 +86,8 @@ jobs:
         run: python3 scripts/apply-v024.py
       - name: Show direct conclusions after every questionnaire
         run: python3 scripts/apply-v025.py
+      - name: Reopen finished questionnaires at results and fix progress
+        run: python3 scripts/apply-v026.py
       - name: Make preview installable alongside older debug builds
         shell: bash
         run: |
@@ -92,7 +97,7 @@ jobs:
           s = p.read_text()
           old = '    buildTypes {\n        release { isMinifyEnabled = false }\n    }'
           assert old in s, "Unknown Android Gradle buildTypes layout"
-          s = s.replace(old, '    buildTypes {\n        debug { applicationIdSuffix = ".results25" }\n        release { isMinifyEnabled = false }\n    }', 1)
+          s = s.replace(old, '    buildTypes {\n        debug { applicationIdSuffix = ".results26" }\n        release { isMinifyEnabled = false }\n    }', 1)
           p.write_text(s)
           m = Path("app/src/main/AndroidManifest.xml")
           manifest = m.read_text()
@@ -126,11 +131,11 @@ jobs:
           APK=app/build/outputs/apk/debug/app-debug.apk
           test -s "$APK"
           "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | tee apk-metadata.txt
-          grep -F "package: name='ru.tishe.app.results25'" apk-metadata.txt
+          grep -F "package: name='ru.tishe.app.results26'" apk-metadata.txt
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: Tishe-Android-v025-results25-APK
+          name: Tishe-Android-v026-results26-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
