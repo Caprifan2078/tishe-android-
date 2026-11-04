@@ -16,7 +16,7 @@ jobs:
         run: |
           set -euo pipefail
           test -s index.html
-          grep -F 'Web 0.2.3' index.html
+          grep -E 'Web 0.2.3|Web 0.2.4' index.html
           grep -F 'function hasCrypto()' index.html
           grep -F 'function persist()' index.html
           grep -F 'function unifiedCompassSVG' index.html
@@ -29,17 +29,17 @@ jobs:
           assert s.startswith('<!DOCTYPE html>')
           assert s.count('<script') == s.count('</script>')
           assert s.find('structuredClone(state)') == -1
-          assert 'Web 0.2.3' in s
+          assert 'Web 0.2.3' in s or 'Web 0.2.4' in s
           assert 'В Safari' in s or 'Safari' in s
           data=s[s.index('<script type="application/json" id="tishe-data">'):]
           assert len(data)>100000
           print('Source bytes:',len(s.encode('utf-8')))
           PY
-          cp index.html Tishe-Web-v0.2.3-iPhone.html
-          sha256sum Tishe-Web-v0.2.3-iPhone.html
+          cp index.html Tishe-Web-v0.2.4-iPhone.html
+          sha256sum Tishe-Web-v0.2.4-iPhone.html
       - uses: actions/upload-artifact@v4
         with:
-          name: Tishe-Web-v0.2.3-iPhone-HTML
-          path: Tishe-Web-v0.2.3-iPhone.html
+          name: Tishe-Web-v0.2.4-iPhone-HTML
+          path: Tishe-Web-v0.2.4-iPhone.html
           retention-days: 30
           if-no-files-found: error
