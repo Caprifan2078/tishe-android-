@@ -1,0 +1,56 @@
+name: QA Tishe Web 0.2.4 integrity and dedup
+on:
+  push:
+    branches: ['qa/web024-quality-dedup-20261105']
+    paths: ['index.html', '.github/workflows/qa-web024.yml', 'docs/WEB024_QUALITY_QA_RU.md']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate HTML, unique question bank, routes, no second emotion radar
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import re, json
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          assert s.startswith('<!DOCTYPE html>')
+          assert 'Web 0.2.4' in s
+          assert s.count('<script')==s.count('</script>')
+          b=re.search(r'<script type="application/json" id="tishe-data">(.*?)</script>',s,re.S)
+          assert b, 'Cannot find original question bank'
+          d=json.loads(b.group(1))
+          q=[x for m in d['modules'] for x in m['questions']]
+          assert len(d['modules'])==48 and len(q)==504
+          assert len(set(x['id'] for x in q))==504
+          assert len(set(x['text'] for x in q))==504
+          assert {k:len(v) for k,v in d['routes'].items()}=={'40':40,'150':150,'300':300,'500':500}
+          assert all(x in {q['id'] for q in q} for row in d['routes'].values() for x in row)
+          assert len(d['axes'])==18 and len(d['stories'])==6 and len(d['dialogs'])==9
+          assert 'function unifiedCompassSVG(' in s
+          assert 'function radarSVG(' not in s
+          assert 'await writeQueue.catch(()=>{});' in s
+          assert "isResetting=true;" in s
+          assert 'function setSaveStatus(' in s
+          assert "function setFeeling(fid,v){if(isResetting" in s
+          assert "async function makeVault(password){if(localStorage.getItem(VAULT_KEY))" in s
+          assert "const VAULT_KEY='tishe_web_v1_encrypted'" in s
+          assert 'structuredClone(value):JSON.parse(JSON.stringify(value))' in s
+          assert "application/json" in s and 'AES-GCM' in s
+          Path('/tmp/tishe-qa.js').write_text(re.findall(r'<script>\s*(.*?)\s*</script>',s,re.S)[-1],encoding='utf-8')
+          print('PASS: 504 questions, 48 modules, routes 40/150/300/500, 18 axes, 6 stories, 9 dialogues, vault guard, one compass')
+          PY
+          node --check /tmp/tishe-qa.js
+          wc -c index.html
+      - name: Publish offline QA HTML artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tishe-Web-0.2.4-quality-QA
+          path: index.html
+          if-no-files-found: error
+          retention-days: 30
