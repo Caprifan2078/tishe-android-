@@ -1,0 +1,76 @@
+name: QA Android emulator - questionnaire UI smoke
+
+on:
+  push:
+    branches:
+      - 'qa/v027-android-ui-smoke-20261104'
+    paths:
+      - 'scripts/QuestionnaireUiSmokeTest.kt'
+      - 'scripts/apply-v027-ui-tests.py'
+      - '.github/workflows/android-ui-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  emulator-ui-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore and apply exact known Tishe source patches
+        shell: bash
+        run: |
+          set -euo pipefail
+          base64 --decode project-source.b64 > /tmp/tishe-project.zip
+          unzip -t /tmp/tishe-project.zip
+          unzip -oq /tmp/tishe-project.zip -d .
+          for script in             scripts/apply-redesign-v015.py             scripts/apply-v016.py scripts/apply-v017.py scripts/apply-v018.py             scripts/apply-v019.py scripts/apply-v020.py scripts/apply-v021.py             scripts/apply-v022.py scripts/apply-v023.py scripts/apply-v024.py             scripts/apply-v025.py scripts/apply-v026.py             scripts/apply-v027-ui-tests.py; do
+            python3 "$script"
+          done
+          grep -F 'versionName = "0.26.0"' app/build.gradle.kts
+          test -f app/src/androidTest/java/ru/tishe/app/QuestionnaireUiSmokeTest.kt
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Install platform and build-tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Compile Android app and Compose UI instrumented tests
+        shell: bash
+        run: |
+          set -o pipefail
+          gradle --no-daemon --stacktrace :app:assembleDebug :app:assembleDebugAndroidTest 2>&1 | tee ui-compile.log
+      - name: Enable emulator acceleration if present
+        shell: bash
+        run: |
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+      - name: Tap through questionnaire result screens on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-boot-timeout: 900
+          script: gradle --no-daemon --stacktrace :app:connectedDebugAndroidTest
+      - name: Upload emulator logs and screen test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tishe-v026-android-emulator-ui-qa-evidence
+          path: |
+            ui-compile.log
+            app/build/reports/androidTests/
+            app/build/outputs/androidTest-results/
+          if-no-files-found: ignore
+          retention-days: 14
