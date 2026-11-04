@@ -1,0 +1,44 @@
+name: Export Tishe Web iPhone HTML for verification
+on:
+  push:
+    branches: [gh-pages]
+    paths: [.github/workflows/export-tishe-web.yml, index.html]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-and-export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify offline app and Safari compatibility protections
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s index.html
+          grep -F 'Web 0.2.2' index.html
+          grep -F 'function hasCrypto()' index.html
+          grep -F 'function persist()' index.html
+          grep -F 'function unifiedCompassSVG' index.html
+          grep -F 'window.scrollTo(0,0)' index.html
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          assert s.startswith('<!DOCTYPE html>')
+          assert s.count('<script') == s.count('</script>')
+          assert s.find('structuredClone(state)') == -1
+          assert 'Web 0.2.2' in s
+          assert 'В Safari' in s or 'Safari' in s
+          data=s[s.index('<script type="application/json" id="tishe-data">'):]
+          assert len(data)>100000
+          print('Source bytes:',len(s.encode('utf-8')))
+          PY
+          cp index.html Tishe-Web-v0.2.2-iPhone.html
+          sha256sum Tishe-Web-v0.2.2-iPhone.html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Tishe-Web-v0.2.2-iPhone-HTML
+          path: Tishe-Web-v0.2.2-iPhone.html
+          retention-days: 30
+          if-no-files-found: error
