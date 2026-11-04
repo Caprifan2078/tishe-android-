@@ -72,6 +72,15 @@ internal object DirectTestConclusionEngine {
         }
         val focus = significant.firstOrNull()
         val focusNames = significant.take(2).joinToString(" и ") { titleFor(it) }
+        // The 40-question route also includes sleep/support and interests:
+        // include those real answers instead of silently ignoring 16 questions.
+        val resourceAnswers = questions.filter { it.module.id == "resources" }
+            .mapNotNull { q -> answers[q.question.id]?.takeIf { it in 0..4 }?.let { q.question to it } }
+        val frequentResourceIssues = resourceAnswers.filter { it.second >= 3 }
+        val resourceConcern = resourceAnswers.size >= 4 && frequentResourceIssues.size >= 3
+        val interests = questions.filter { it.module.id == "values" }
+            .mapNotNull { q -> answers[q.question.id]?.takeIf { it in 3..4 }?.let { q.question.text } }
+            .take(2)
         val headline = when {
             strong.isNotEmpty() ->
                 "По вашим ответам у вас часто возникают трудности с $focusNames."
@@ -79,6 +88,8 @@ internal object DirectTestConclusionEngine {
                 "По вашим ответам есть заметные сложности с $focusNames."
             occasional.isNotEmpty() ->
                 "По вашим ответам есть отдельные сложности с $focusNames."
+            resourceConcern ->
+                "По вашим ответам у вас заметные трудности с восстановлением, нагрузкой или поддержкой."
             stats.size == domains.size ->
                 "По тесту вы не отметили частых трудностей в шести основных темах."
             else ->
@@ -89,6 +100,9 @@ internal object DirectTestConclusionEngine {
                 "Главная причина вывода: в теме «${AssessmentCatalog.find(focus.id)!!.title}» " +
                     "${focus.high} из ${focus.answered} ответов отмечены как «часто» или «почти всегда». " +
                     "Это ваш ответ, а не медицинский диагноз."
+            resourceConcern ->
+                "В разделе «Ритм жизни и опоры» ${frequentResourceIssues.size} из ${resourceAnswers.size} ответов выбраны на уровне «часто» или «почти всегда». " +
+                    "Это ответы о повседневных трудностях, не диагноз."
             stats.isNotEmpty() ->
                 "Ни одна из шести основных тем не набрала нескольких частых отметок. " +
                     "Это не означает, что у вас вообще нет трудностей."
@@ -97,6 +111,19 @@ internal object DirectTestConclusionEngine {
         val concrete = mutableListOf<String>()
         for (entry in significant.take(3)) {
             concrete += "${AssessmentCatalog.find(entry.id)!!.title}: частые отметки в ${entry.high} из ${entry.answered} ответов."
+        }
+        if (frequentResourceIssues.isNotEmpty()) {
+            concrete += "Отдых и поддержка: ${frequentResourceIssues.size} из ${resourceAnswers.size} частых отметок."
+        }
+        if (interests.isNotEmpty()) {
+            concrete += "Вам близки: ${interests.joinToString("; ")}."
+        }
+        // The extra first-route context includes four feeling/life reflections.
+        if (level == JourneyLevel.START) {
+            val extraStart = questions.filter { it.module.id == "emotion_layers" }
+                .mapNotNull { q -> answers[q.question.id]?.takeIf { it in 3..4 }?.let { q.question.text } }
+                .take(1)
+            concrete += extraStart.map { "Ещё вы отметили: «$it»." }
         }
         // Long questionnaires have mixed, positively and negatively keyed items.
         // Quote actual endorsed statements, never calculate a made-up 'problem' score.
@@ -114,9 +141,10 @@ internal object DirectTestConclusionEngine {
         }
         val prefix = if (valid < questions.size)
             "Это предварительный итог (${valid} из ${questions.size} ответов). " else ""
-        return DirectTestConclusion(prefix + headline, explanation, concrete.take(5),
+        return DirectTestConclusion(prefix + headline, explanation, concrete.take(6),
             focus?.let { steps.getValue(it.id) }
-                ?: "Если какая-то трудность реально мешает вам жить, обратите на неё внимание; помощь можно искать при любом балле.")
+                ?: if (resourceConcern) "Выберите один небольшой способ отдыха или поддержки, который реально доступен вам."
+                else "Если какая-то трудность мешает вам жить, помощь можно искать при любом результате теста.")
     }
 
     fun single(module: SurveyModule, answers: Map<String, Int>): DirectTestConclusion {
