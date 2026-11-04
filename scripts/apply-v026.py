@@ -21,6 +21,17 @@ def exact(filename, before, after):
         raise RuntimeError(f"{filename}: expected one match, got {text.count(before)} for {before[:85]!r}")
     target.write_text(text.replace(before, after), encoding="utf-8")
 
+# Android system Back on a report returns to its questions, not out of assessment.
+for filename in ("JourneyUi.kt", "AssessmentUi.kt"):
+    target = root / filename
+    source = target.read_text(encoding="utf-8")
+    import_line = "import androidx.compose.runtime.saveable.rememberSaveable"
+    if source.count(import_line) != 1:
+        raise RuntimeError("Expected saveable import in " + filename)
+    source = source.replace(import_line,
+        import_line + "\\nimport androidx.activity.compose.BackHandler", 1)
+    target.write_text(source, encoding="utf-8")
+
 exact("JourneyUi.kt",
     '    var showResults by rememberSaveable(level.name) { mutableStateOf(false) }',
     '''    // Old completed answers must lead straight to their saved report on reopening.
@@ -28,6 +39,10 @@ exact("JourneyUi.kt",
     var showResults by rememberSaveable(level.name) {
         mutableStateOf(AssessmentResultEntryPolicy.completedJourney(level, answers))
     }''')
+exact("JourneyUi.kt",
+    '    if (showResults) {\\n        JourneyReportScreen(',
+    '    if (showResults) {\\n        BackHandler { showResults = false }\\n        JourneyReportScreen(')
+
 
 exact("AssessmentUi.kt",
     '    var showResults by rememberSaveable(module.id) { mutableStateOf(false) }',
@@ -35,6 +50,10 @@ exact("AssessmentUi.kt",
     var showResults by rememberSaveable(module.id) {
         mutableStateOf(AssessmentResultEntryPolicy.completedModule(module, answers))
     }''')
+exact("AssessmentUi.kt",
+    '    if (showResults) {\\n        SingleSurveyReportScreen(',
+    '    if (showResults) {\\n        BackHandler { showResults = false }\\n        SingleSurveyReportScreen(')
+
 
 exact("AssessmentUi.kt",
     '    val chosen = answers[question.id]',
