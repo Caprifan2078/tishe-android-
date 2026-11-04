@@ -1,4 +1,4 @@
-name: Build Tishe Android APK (QA v0.23)
+name: Build Tishe Android APK (QA v0.24)
 on:
   push:
     branches: [main, 'qa/**']
@@ -15,6 +15,10 @@ on:
       - 'scripts/apply-v021.py'
       - 'scripts/apply-v022.py'
       - 'scripts/apply-v023.py'
+      - 'scripts/apply-v024.py'
+      - 'scripts/QuestionnaireNarrativeEngine.kt'
+      - 'scripts/QuestionnaireNarrativeUi.kt'
+      - 'scripts/QuestionnaireNarrativeEngineTest.kt'
       - 'scripts/JourneyReportEngine.kt'
       - 'scripts/JourneyReportUi.kt'
       - 'scripts/JourneyReportEngineTest.kt'
@@ -72,6 +76,8 @@ jobs:
         run: python3 scripts/apply-v022.py
       - name: Explain outcomes of all questionnaires (40/150/300/500)
         run: python3 scripts/apply-v023.py
+      - name: Explain evidence and limitations for every questionnaire
+        run: python3 scripts/apply-v024.py
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
