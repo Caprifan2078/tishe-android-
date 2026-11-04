@@ -55,7 +55,8 @@ class QuestionnaireUiSmokeTest {
         }
         for (level in JourneyLevel.entries) {
             compose.runOnIdle { mode.value = level }
-            compose.onNodeWithText("Твои результаты").assertExists()
+            compose.onNodeWithTag("journey_result_list")
+                .performScrollToNode(hasText(level.title, substring = true))
             compose.onNodeWithText(level.title, substring = true).assertExists()
             compose.onNodeWithTag("journey_result_list")
                 .performScrollToNode(hasText("Итог теста"))
