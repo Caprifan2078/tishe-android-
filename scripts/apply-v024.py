@@ -26,7 +26,7 @@ s = s[:start] + "        item { QuestionnaireNarrativeCard(narrative) }\n" + s[e
 b = "    val report = remember(module, answers) { JourneyReportEngine.single(module, answers) }"
 assert s.count(b) == 1
 s = s.replace(b, b + "\n    val narrative = remember(module, answers) { QuestionnaireNarrativeEngine.forSingle(module, answers) }")
-anchor = '        Text("Результат меняется вместе с ответами.'
+anchor = '        Text("Если переживания мешают жизни, можно обсудить их со специалистом независимо от результата.'
 assert s.count(anchor) == 1
 s = s.replace(anchor, '        QuestionnaireNarrativeCard(narrative)\n' + anchor)
 ui.write_text(s, encoding="utf-8")
