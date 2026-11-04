@@ -10,6 +10,12 @@ internal object AssessmentResultEntryPolicy {
         return module.questions.count { answers[it.id] in range }
     }
 
+    fun firstUnansweredIndex(module: SurveyModule, answers: Map<String, Int>): Int {
+        val maximum = if (module.evidenceBased) 3 else 4
+        return module.questions.indexOfFirst { answers[it.id] !in 0..maximum }
+            .takeIf { it >= 0 } ?: 0
+    }
+
     fun completedModule(module: SurveyModule, answers: Map<String, Int>): Boolean =
         module.questions.isNotEmpty() && answered(module, answers) == module.questions.size
 
