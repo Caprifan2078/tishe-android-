@@ -37,3 +37,9 @@
 ## 2026-11-09 — latency measurement QA signed off
 - Fixed extraction pipeline to rely on Gradle per-test logcat, validated input, one-line runner command. GitHub workflow 42547438087 SUCCESS, 11/11 Android instrumentation tests, JSON evidence archived.
 - Three independent repeated benchmarks show 500-question p95 ~64–69 ms; upcoming task is risk-controlled off-main storage, not reverting durable commit to apply().
+
+## 2026-11-09 — QA off-main confirmed assessments
+- Added `scripts/apply-qa-assessment-offmain.py` for single-flight async-to-IO `saveAssessment` handling. UI state remains confirmed-only; temporary non-dismissible saving screen blocks overlapping actions; error feedback preserved.
+- Added `scripts/AssessmentOffMainUiTest.kt` to verify writes never use main thread, two in-order answers, cursor movement, and failed first-checkpoint commit. Existing synchronous-assertion E2E test adapted to wait for confirmation.
+- GitHub builds regular/preview passed 130 JUnit and lint 0 errors; emulator 42548771233 12/12 and 42549521730 13/13 PASS. APK remains v0.27/code34; no main/release or private data changed.
+- Next: rotation/process interruption pending IO, physical device performance and stable key signature.
