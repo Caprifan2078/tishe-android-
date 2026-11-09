@@ -106,7 +106,7 @@ code = code.replace(old, "persistAssessment(next)")
 
 if code.count("store.saveAssessment(") != 1:
     raise RuntimeError("Unexpected remaining synchronous saveAssessment call")
-if code.count("persistAssessment(next)") != 3 or code.count("persistAssessment(next, durable = false)") != 1:
+if code.count("persistAssessment(next)") != 4 or code.count("persistAssessment(next, durable = false)") != 1:
     raise RuntimeError("Missing replacement of answer/cursor callbacks")
 
 once(
