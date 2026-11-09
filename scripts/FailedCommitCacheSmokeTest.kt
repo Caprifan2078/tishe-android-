@@ -23,6 +23,11 @@ class FailedCommitCacheSmokeTest {
                     override fun edit(): SharedPreferences.Editor {
                         val editor = real.edit()
                         return object : SharedPreferences.Editor by editor {
+                            override fun putString(key: String?, value: String?): SharedPreferences.Editor {
+                                // Editor.putString returns Editor; keep the test double in the chain.
+                                editor.putString(key, value)
+                                return this
+                            }
                             override fun commit(): Boolean {
                                 // Model a failed disk commit whose new value is visible in RAM.
                                 editor.apply()

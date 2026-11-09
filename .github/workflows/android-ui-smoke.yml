@@ -13,6 +13,7 @@ on:
       - 'scripts/apply-qa-phq4-rotation.py'
       - 'scripts/apply-qa-assessment-durable.py'
       - 'scripts/AssessmentDurableDiskSmokeTest.kt'
+      - 'scripts/FailedCommitCacheSmokeTest.kt'
       - 'scripts/AssessmentResumePositionTest.kt'
       - 'scripts/AssessmentResultEntryPolicy.kt'
       - '.github/workflows/android-ui-smoke.yml'
