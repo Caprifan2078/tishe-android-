@@ -79,9 +79,7 @@ jobs:
             set -e
             gradle --no-daemon --stacktrace :app:connectedDebugAndroidTest
             # Gradle uninstalls the test app; read preserved per-test logcat instead.
-            python3 scripts/extract-qa-assessment-latency.py \
-              app/build/outputs/androidTest-results/connected/debug \
-              qa-assessment-latency.json
+            python3 scripts/extract-qa-assessment-latency.py app/build/outputs/androidTest-results/connected/debug qa-assessment-latency.json
       - name: Upload emulator logs and screen test evidence
         if: always()
         uses: actions/upload-artifact@v4

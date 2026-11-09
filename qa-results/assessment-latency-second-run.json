@@ -1,0 +1,41 @@
+{
+  "source": "GitHub Actions emulator run 42546915760, artifact 13643543769",
+  "ciOutcome": "11/11 Android tests PASS; overall CI FAILED post-test because script command split across lines",
+  "format": "tishe-assessment-main-thread-latency-v1",
+  "runner": "GitHub Actions Android emulator API 35 Pixel 6 profile",
+  "samplesPerSize": 32,
+  "measurements": [
+    {
+      "questionCount": 40,
+      "samples": 32,
+      "medianMs": 11.57,
+      "p95Ms": 32.953,
+      "maxMs": 51.003,
+      "minMs": 2.897
+    },
+    {
+      "questionCount": 150,
+      "samples": 32,
+      "medianMs": 10.649,
+      "p95Ms": 58.466,
+      "maxMs": 67.164,
+      "minMs": 2.635
+    },
+    {
+      "questionCount": 300,
+      "samples": 32,
+      "medianMs": 9.115,
+      "p95Ms": 34.6,
+      "maxMs": 99.549,
+      "minMs": 4.151
+    },
+    {
+      "questionCount": 500,
+      "samples": 32,
+      "medianMs": 22.917,
+      "p95Ms": 63.899,
+      "maxMs": 81.472,
+      "minMs": 8.527
+    }
+  ]
+}

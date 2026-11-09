@@ -36,3 +36,7 @@
 - Источник: GitHub Actions run 42545977930, 11/11 Android UI tests PASS (внутри Gradle), overall workflow FAILURE из-за `run-as: unknown package: ru.tishe.app` уже ПОСЛЕ тестов. Gradle UTP сохранил per-test logcat в artifact 13643612156; `qa-results/assessment-latency-first-run.json` извлечён из него.
 - Исправлен CI extractor без повторного чтения приватных prefs: `scripts/extract-qa-assessment-latency.py` читает UTP logcat и создаёт JSON. Следующий CI запуск должен подтвердить всю цепочку.
 - Следующая инженерная задача: вынести подтверждаемую запись (commit) из UI-потока, но сначала спроектировать строгую сериализацию действий, блокировку повторных тапов до подтверждения, стабильное восстановление экрана и ошибку сохранения. Нельзя возвращаться к `apply()` для ответов и нельзя терять несколько быстрых ответов.
+
+### QA latency second run — 2026-11-09
+- 42546915760: 11/11 Android emulator tests passed; p95 32.953, 58.466, 34.600, 63.899 ms at 40/150/300/500. Overall CI failed in postprocessing due multi-line shell command, not app. Evidence artifact 13643543769, machine-readable JSON in `qa-results/assessment-latency-second-run.json`.
+- Corrected extraction invocation into one line. Await next CI. Production app code remains unchanged.

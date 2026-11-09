@@ -29,3 +29,7 @@
 - Added `AssessmentSaveLatencyTest.kt` for 128 real main-thread encrypted writes in an isolated preference namespace, without changing customer data or product APK.
 - Added `scripts/extract-qa-assessment-latency.py` to collect numeric data from UTP logcat. Initial workflow failed after passing 11/11 UI because Gradle removed app before `run-as`; extraction repaired. Original evidence preserved in `qa-results/assessment-latency-first-run.json`.
 - First measurement p95: 23.053 / 54.326 / 31.493 / 68.814 ms for 40/150/300/500; off-main design is the next P1 task.
+
+## QA 2026-11-09 — latency repeat and extractor invocation
+- Second 11/11 emulator pass; main-thread 500-question p95 63.899 ms, confirming previous 68.814 ms risk.
+- Fixed CI invocation: one shell line for Python logcat extractor (runner script does not support line-joined arguments). Original evidence preserved.

@@ -46,3 +46,8 @@
   - 500: median 12.267; p95 68.814; max 75.029.
 - These are emulator-specific main-thread crypto + JSON + commit timings, not ANR frequency and not real device FPS. 150 being slower than 300 is evidence of run variability; do not infer monotonic growth.
 - Resolved extraction strategy: parse UTP per-test logcat on CI runner, validate expected sizes and sample count, emit JSON independent of installed package. Check the next workflow before marking pipeline PASS.
+
+## Independent latency repeat — 2026-11-09
+- Second emulator run 42546915760: **11/11 Android tests PASS** per XML report (0 failures, 0 errors, 0 skipped), benchmark test duration 3.101 s. Overall workflow again FAILED **only after successful Gradle**: `reactivecircus/android-emulator-runner` executes each script line separately, so line continuation `\` passed no args to Python extractor.
+- Full UTP logcat artifact 13643543769 was downloaded; extractor ran locally SUCCESS. p95(ms): 40=32.953, 150=58.466, 300=34.600, 500=63.899; median(ms): 11.570/10.649/9.115/22.917. Source `qa-results/assessment-latency-second-run.json`.
+- Corrected workflow to invoke `python3 scripts/extract-qa-assessment-latency.py <results-dir> <output>` on ONE script line. No production source changes. Re-run required to confirm whole CI goes green.
