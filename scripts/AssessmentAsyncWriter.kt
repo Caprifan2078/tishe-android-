@@ -11,8 +11,8 @@ import kotlinx.coroutines.withContext
  * never use fire-and-forget write or assume SharedPreferences.apply is durable.
  */
 internal class AssessmentAsyncWriter(
-    private val write: (AssessmentState, Boolean) -> Unit,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val write: (AssessmentState, Boolean) -> Unit
 ) {
     suspend fun save(value: AssessmentState, durable: Boolean = true) {
         withContext(ioDispatcher) {
