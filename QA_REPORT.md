@@ -34,3 +34,26 @@
 - Android emulator повторная попытка 42540960128: **SUCCESS 10 tests / 0 failures / 0 errors / 0 skipped**. XML artifact 13641521230, `app/build/outputs/androidTest-results/connected/debug/TEST-emulator-5554 - 15-_app-.xml`. Особенно `encryptedAnswerIsOnDiskWhenSaveReturns` PASS, `unconfirmedAnswerIsNotAdoptedAfterCommitFailure` PASS; старые 8 тестов PASS.
 - QA APK GitHub artifact 13641006960: `app-debug.apk` 11,099,265 bytes, SHA-256 `7a98b8b38094119605d9a1aeb7175ebbbe580769d1b38df7807ea6a89a14dca0`, ZIP CRC PASS, AndroidManifest + 4 DEX entries. applicationId `ru.tishe.app.results27`, version 0.27.0/code34. APK signing cert SHA-256 `e29246dca78a43c36b70bfc9eb1920041ab4ddbf90d5a5c4952ba8722a919871`.
 - Ограничения: ошибка коммита симулирована тестовым двойником, не реальным отказом флеш-памяти; физические устройства, power-loss, UI-latency при массовом заполнении анкет и безопасное обновление старой APK НЕ ПРОВЕРЕНЫ.
+
+## Android performance experiment — 2026-11-09
+- Source code for measurement-only QA: commit `6aafcfe5a6f58cc5acdfa652a13786cef3ac66f1` (new `AssessmentSaveLatencyTest` on isolated QA prefs; production unaffected).
+- GitHub Actions run https://github.com/Caprifan2078/tishe-android-/actions/runs/42545977930: Gradle `connectedDebugAndroidTest` SUCCESS, Android API35 emulator 11 tests / 0 failures, instrumentation includes 128 measured commits and warmups.
+- **Overall workflow FAILED only after successful Gradle test:** `adb shell run-as ru.tishe.app` -> unknown package; Gradle uninstalled target. Original `qa-assessment-latency.json` inside app not accessible after task. Logcat captured all 4 lines. Artifact 13643612156.
+- Extracted values (milliseconds, 32 samples each, with 4 warmups):
+  - 40: median 7.565; p95 23.053; max 23.668.
+  - 150: median 29.243; p95 54.326; max 80.443.
+  - 300: median 8.976; p95 31.493; max 62.041.
+  - 500: median 12.267; p95 68.814; max 75.029.
+- These are emulator-specific main-thread crypto + JSON + commit timings, not ANR frequency and not real device FPS. 150 being slower than 300 is evidence of run variability; do not infer monotonic growth.
+- Resolved extraction strategy: parse UTP per-test logcat on CI runner, validate expected sizes and sample count, emit JSON independent of installed package. Check the next workflow before marking pipeline PASS.
+
+## Independent latency repeat — 2026-11-09
+- Second emulator run 42546915760: **11/11 Android tests PASS** per XML report (0 failures, 0 errors, 0 skipped), benchmark test duration 3.101 s. Overall workflow again FAILED **only after successful Gradle**: `reactivecircus/android-emulator-runner` executes each script line separately, so line continuation `\` passed no args to Python extractor.
+- Full UTP logcat artifact 13643543769 was downloaded; extractor ran locally SUCCESS. p95(ms): 40=32.953, 150=58.466, 300=34.600, 500=63.899; median(ms): 11.570/10.649/9.115/22.917. Source `qa-results/assessment-latency-second-run.json`.
+- Corrected workflow to invoke `python3 scripts/extract-qa-assessment-latency.py <results-dir> <output>` on ONE script line. No production source changes. Re-run required to confirm whole CI goes green.
+
+## Full CI latency pipeline verified — 2026-11-09
+- Run https://github.com/Caprifan2078/tishe-android-/actions/runs/42547438087 — **SUCCESS**, Android emulator API35, 11/11 UI/instrumentation tests, no failures/errors/skips. JSON extraction PASS from UTP logcat after connectedDebugAndroidTest, artifact 13644246528.
+- 32 warm (4 excluded) / observed (32 included) writes per questionnaire length 40,150,300,500. Third-run p95 (ms) 94.983 / 57.352 / 68.246 / 67.370; median (ms) 27.869 / 11.930 / 25.287 / 25.307.
+- Three p95 results for 500: first 68.814, second 63.899, third 67.370 ms. Note emulator variability, cannot infer physical-device FPS or ANR.
+- Final result file `qa-results/assessment-latency-ci-pass.json`, artifact 13644246528. No product APK was built or version changed in this test-only iteration.

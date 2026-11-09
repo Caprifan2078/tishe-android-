@@ -6,6 +6,7 @@ on:
       - 'qa/v027-android-ui-smoke-20261104'
       - 'qa/phq4-rotation-20261109'
       - 'qa/assessment-durable-20261109'
+      - 'qa/assessment-latency-benchmark-20261109'
     paths:
       - 'scripts/QuestionnaireUiSmokeTest.kt'
       - 'scripts/apply-v027-ui-tests.py'
@@ -14,6 +15,9 @@ on:
       - 'scripts/apply-qa-assessment-durable.py'
       - 'scripts/AssessmentDurableDiskSmokeTest.kt'
       - 'scripts/FailedCommitCacheSmokeTest.kt'
+      - 'scripts/AssessmentSaveLatencyTest.kt'
+      - 'scripts/apply-qa-assessment-benchmark.py'
+      - 'scripts/extract-qa-assessment-latency.py'
       - 'scripts/AssessmentResumePositionTest.kt'
       - 'scripts/AssessmentResultEntryPolicy.kt'
       - '.github/workflows/android-ui-smoke.yml'
@@ -35,7 +39,7 @@ jobs:
           base64 --decode project-source.b64 > /tmp/tishe-project.zip
           unzip -t /tmp/tishe-project.zip
           unzip -oq /tmp/tishe-project.zip -d .
-          for script in             scripts/apply-redesign-v015.py             scripts/apply-v016.py scripts/apply-v017.py scripts/apply-v018.py             scripts/apply-v019.py scripts/apply-v020.py scripts/apply-v021.py             scripts/apply-v022.py scripts/apply-v023.py scripts/apply-v024.py             scripts/apply-v025.py scripts/apply-v026.py scripts/apply-v027-navigation.py             scripts/apply-v027-ui-tests.py scripts/apply-qa-phq4-rotation.py scripts/apply-qa-assessment-durable.py; do
+          for script in             scripts/apply-redesign-v015.py             scripts/apply-v016.py scripts/apply-v017.py scripts/apply-v018.py             scripts/apply-v019.py scripts/apply-v020.py scripts/apply-v021.py             scripts/apply-v022.py scripts/apply-v023.py scripts/apply-v024.py             scripts/apply-v025.py scripts/apply-v026.py scripts/apply-v027-navigation.py             scripts/apply-v027-ui-tests.py scripts/apply-qa-phq4-rotation.py scripts/apply-qa-assessment-durable.py scripts/apply-qa-assessment-benchmark.py; do
             python3 "$script"
           done
           grep -F 'versionName = "0.27.0"' app/build.gradle.kts
@@ -71,14 +75,19 @@ jobs:
           profile: pixel_6
           disable-animations: true
           emulator-boot-timeout: 900
-          script: gradle --no-daemon --stacktrace :app:connectedDebugAndroidTest
+          script: |
+            set -e
+            gradle --no-daemon --stacktrace :app:connectedDebugAndroidTest
+            # Gradle uninstalls the test app; read preserved per-test logcat instead.
+            python3 scripts/extract-qa-assessment-latency.py app/build/outputs/androidTest-results/connected/debug qa-assessment-latency.json
       - name: Upload emulator logs and screen test evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Tishe-v027-assessment-durability-qa-evidence
+          name: Tishe-v027-assessment-latency-qa-evidence
           path: |
             ui-compile.log
+            qa-assessment-latency.json
             app/build/reports/androidTests/
             app/build/outputs/androidTest-results/
           if-no-files-found: ignore

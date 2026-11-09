@@ -1,0 +1,13 @@
+{
+  "source": "GitHub Actions Android emulator run 42545977930, artifact 13643612156",
+  "ciOutcome": "tests 11/11 PASS; post-test adb run-as failed after Gradle removed package",
+  "format": "tishe-assessment-main-thread-latency-v1",
+  "runner": "GitHub Actions Android emulator API 35 Pixel 6 profile",
+  "samplesPerSize": 32,
+  "measurements": [
+    {"questionCount":40,"samples":32,"medianMs":7.565,"p95Ms":23.053,"maxMs":23.668,"minMs":3.077},
+    {"questionCount":150,"samples":32,"medianMs":29.243,"p95Ms":54.326,"maxMs":80.443,"minMs":11.043},
+    {"questionCount":300,"samples":32,"medianMs":8.976,"p95Ms":31.493,"maxMs":62.041,"minMs":4.471},
+    {"questionCount":500,"samples":32,"medianMs":12.267,"p95Ms":68.814,"maxMs":75.029,"minMs":6.650}
+  ]
+}

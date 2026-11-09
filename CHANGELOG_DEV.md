@@ -24,3 +24,16 @@
 - `FailedCommitCacheSmokeTest`: имитация Editor.commit()=false после изменения RAM, затем проверка, что SecureStorage по-прежнему выдаёт последний подтверждённый ответ.
 - Первое QA падение связано с тестовой цепочкой Editor.putString; исправлена тестовая реализация (commit `b27ecbc`), повторный Android UI CI 42540960128 **10/10 PASS**.
 - Приложение v0.27.0/code34; не выполнялись merge в main, миграция, изменение схемы AES-GCM или публикация ключа.
+
+## 2026-11-09 — QA on-main write latency
+- Added `AssessmentSaveLatencyTest.kt` for 128 real main-thread encrypted writes in an isolated preference namespace, without changing customer data or product APK.
+- Added `scripts/extract-qa-assessment-latency.py` to collect numeric data from UTP logcat. Initial workflow failed after passing 11/11 UI because Gradle removed app before `run-as`; extraction repaired. Original evidence preserved in `qa-results/assessment-latency-first-run.json`.
+- First measurement p95: 23.053 / 54.326 / 31.493 / 68.814 ms for 40/150/300/500; off-main design is the next P1 task.
+
+## QA 2026-11-09 — latency repeat and extractor invocation
+- Second 11/11 emulator pass; main-thread 500-question p95 63.899 ms, confirming previous 68.814 ms risk.
+- Fixed CI invocation: one shell line for Python logcat extractor (runner script does not support line-joined arguments). Original evidence preserved.
+
+## 2026-11-09 — latency measurement QA signed off
+- Fixed extraction pipeline to rely on Gradle per-test logcat, validated input, one-line runner command. GitHub workflow 42547438087 SUCCESS, 11/11 Android instrumentation tests, JSON evidence archived.
+- Three independent repeated benchmarks show 500-question p95 ~64–69 ms; upcoming task is risk-controlled off-main storage, not reverting durable commit to apply().
