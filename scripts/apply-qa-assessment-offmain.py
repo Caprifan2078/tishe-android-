@@ -104,7 +104,7 @@ once("        if (saveError && !safetyOpen) {",overlay + "        if (saveError 
 
 if 'persist({ store.saveAssessment(' in s:
     raise RuntimeError("Unexpected remaining synchronous assessment callback")
-if s.count('persistAssessment(next)') != 3:
+if s.count('persistAssessment(next)') != 4:  # 3 edits plus the confirmed first-journey checkpoint
     raise RuntimeError("Unexpected number of standard assessment changes")
 if s.count('persistAssessment(next, durable = false)') != 1:
     raise RuntimeError("Cursor write not routed through IO")
