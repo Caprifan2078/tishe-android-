@@ -3,13 +3,13 @@
 - Обновлено: 2026-11-09. Android офлайн-приложение эмоциональной самопомощи; не диагноз.
 - Репозиторий: Caprifan2078/tishe-android-. Основная ветка main оставлена без изменений.
 - База: qa/v027-android-ui-smoke-20261104, SHA 857649600e862befc5f83b2ce448fb8d2d02841b, versionName 0.27.0, versionCode 34.
-- Рабочая ветка: qa/phq4-rotation-20261109; QA-патч поверх v0.27, номер версии не повышен.
+- Рабочая ветка: qa/assessment-offmain-20261109, на базе всех проверенных QA-патчей v0.27; main и версия 0.27.0/code34 не изменены.
 - Последнее известное подтверждение базы: GitHub Actions build runs 41831297284 и 41831308379 success; Android emulator run 41831349853, 7/7 UI tests success; в preview CI 130/130 JUnit.
 - Реализовано: локальный дневник AES-GCM/Keystore, упражнения, тесты 40/150/300/500, результаты и Суперкомпас, навигация/восстановление экранов при Activity recreation.
 - Текущая работа: PHQ-4 подтверждение 18+ не должно сбрасываться на уже открытой анкете после поворота экрана. Малый Boolean остаётся только в Android SavedState, не становится частью личного JSON.
 - Проверено для QA-коммита b216c6d: Preview GitHub Actions 42538073673 SUCCESS, Regular 42538073711 SUCCESS, Android emulator 42538073966 SUCCESS; 130/130 JUnit и 8/8 UI, Lint 0 ошибок / 4 предупреждения. Физический телефон не проверен.
 - P0: стабильная подпись APK, безопасное обновление без потери существующих записей — заблокировано до безопасного управления личным signing key; старую установку не удалять.
-- Следующая задача: проверить workflow этой ветки, результаты UI, затем проверить сохранность ответов при нестандартном завершении процесса и TalkBack/крупные шрифты.
+- Следующая задача: проверка Activity recreation непосредственно во время сохранения и безопасной повторной попытки после ошибки; далее подписание APK постоянным ключом и физический Android QA.
 - Воспроизведение: выполнить GitHub CI на ветке; скрипт apply-qa-phq4-rotation.py должен запускаться ПОСЛЕ apply-v027-navigation.py; в эмуляторном workflow ПОСЛЕ apply-v027-ui-tests.py.
 
 ## Итерация: durable assessment saves (2026-11-09)
@@ -47,3 +47,12 @@
 - Заключительный p95 main-thread (ms): 40=94.983, 150=57.352, 300=68.246, 500=67.370. Эти цифры меняются между прогонами, но все три запуска фиксировали p95 больше 16.7 ms; UI jank вероятен. Не переводить ответы на apply() и не обходить проверку commit().
 - Machine-readable: `qa-results/assessment-latency-ci-pass.json`.
 - Next P1 engineering iteration: serial off-main assessment saving, stable screen during save, preserve acknowledged answers, fail/report on IO error, tests for rapid taps/rotation/cursor, measure responsiveness; keep QA, main untouched. P0 stable APK signing remains open.
+
+## 2026-11-09 — QA assessment off-main (подтверждено)
+- Назначение: убрать блокировки главного UI потока, вызванные AES-GCM + JSON + синхронным `SharedPreferences.commit()`. Исходный 500-question p95 on-main ~63.9–68.8ms на API35 emulator (предыдущий benchmark).
+- Production patch `scripts/apply-qa-assessment-offmain.py` в QA ветке `qa/assessment-offmain-20261109`: `persistAssessment` выполняет `store.saveAssessment` в `Dispatchers.IO`, UI state меняется только после подтверждённой записи; single-flight защита, неотменяемый overlay ожидания, Back блокируется на время записи; `onMove` остаётся восстановимым `durable=false`, но теперь тоже off-main. JSON/AES-GCM и пользовательские данные неизменны.
+- Проверяемый код: `6de4c1e39d7d12e6168a67e92d887ced7de088c7` (первое полностью успешное исполнение); последний QA test-only commit `c91e670519571bb83cd2cafe1a898d2388253495`.
+- GitHub Actions: regular 42548771243 SUCCESS; preview 42548771228 SUCCESS (130/130 JUnit, lint 0 errors / 4 warnings). Android emulator 42548771233 SUCCESS 12/12; дополнительный negative write-failure run 42549521730 SUCCESS 13/13 (XML artifact 13645036402, failures 0/errors 0/skipped 0).
+- QA APK app code from regular tested commit: `/mnt/data/Tishe-v0.27.0-OffMain-Assessment-QA.apk` (context artifact), GitHub preview artifact 13644422837. Package `ru.tishe.app.results27`; versionName 0.27.0/code34; bytes 11099265, SHA256 `8c28c48db7c24bb2aef2d1e779086c7c28349309b6d86ec0cfe3ae8fafe191c4`. Коммит c91e менял только тестовый код, не содержимое приложения.
+- Осталось: Activity recreation во время `commit` (возможна отмена composable scope до подтверждения), реальный low-end hardware / FPS и ANR; постоянная подпись для безопасного обновления `ru.tishe.app`; Android 8+, TalkBack/large-font. Не объявлять production release ready.
+- Следующее инженерное действие: отдельным QA тестом воспроизвести rotation/activity recreation during pending IO, определить ожидаемую semantics confirmation и при необходимости выделить persistence lifetime за пределы composable scope; без миграции или удаления старых данных.
