@@ -12,3 +12,9 @@
 - Regular build: PASS, run 42538073711.
 - Android emulator: PASS, run 42538073966, 8 instrumented tests / 0 errors, включая phq4AgeAcknowledgementSurvivesActivityRecreation.
 - Физический Android и безопасное обновление установленного приложения не проверялись.
+
+## 2026-11-09 — durable assessment answers (QA)
+- `scripts/apply-qa-assessment-durable.py` changes only the default assessment write persistence and the cursor-only `onMove` call; original `encrypted` key, JSON schema, alias `tishe_aes_v1`, version and package remain unchanged.
+- `scripts/AssessmentDurableDiskSmokeTest.kt` adds a real Android file-system regression. Existing 8 UI tests retained.
+- GitHub Actions: regular 42539551427 SUCCESS; preview 42539551472 SUCCESS; emulator 42539551445 SUCCESS (9/9). JUnit 130/130.
+- Remaining: avoid UI-thread fsync stalls before production; stable signing / migration and physical QA unresolved.
