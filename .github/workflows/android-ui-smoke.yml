@@ -5,11 +5,14 @@ on:
     branches:
       - 'qa/v027-android-ui-smoke-20261104'
       - 'qa/phq4-rotation-20261109'
+      - 'qa/assessment-durable-20261109'
     paths:
       - 'scripts/QuestionnaireUiSmokeTest.kt'
       - 'scripts/apply-v027-ui-tests.py'
       - 'scripts/apply-v027-navigation.py'
       - 'scripts/apply-qa-phq4-rotation.py'
+      - 'scripts/apply-qa-assessment-durable.py'
+      - 'scripts/AssessmentDurableDiskSmokeTest.kt'
       - 'scripts/AssessmentResumePositionTest.kt'
       - 'scripts/AssessmentResultEntryPolicy.kt'
       - '.github/workflows/android-ui-smoke.yml'
@@ -31,7 +34,7 @@ jobs:
           base64 --decode project-source.b64 > /tmp/tishe-project.zip
           unzip -t /tmp/tishe-project.zip
           unzip -oq /tmp/tishe-project.zip -d .
-          for script in             scripts/apply-redesign-v015.py             scripts/apply-v016.py scripts/apply-v017.py scripts/apply-v018.py             scripts/apply-v019.py scripts/apply-v020.py scripts/apply-v021.py             scripts/apply-v022.py scripts/apply-v023.py scripts/apply-v024.py             scripts/apply-v025.py scripts/apply-v026.py scripts/apply-v027-navigation.py             scripts/apply-v027-ui-tests.py scripts/apply-qa-phq4-rotation.py; do
+          for script in             scripts/apply-redesign-v015.py             scripts/apply-v016.py scripts/apply-v017.py scripts/apply-v018.py             scripts/apply-v019.py scripts/apply-v020.py scripts/apply-v021.py             scripts/apply-v022.py scripts/apply-v023.py scripts/apply-v024.py             scripts/apply-v025.py scripts/apply-v026.py scripts/apply-v027-navigation.py             scripts/apply-v027-ui-tests.py scripts/apply-qa-phq4-rotation.py scripts/apply-qa-assessment-durable.py; do
             python3 "$script"
           done
           grep -F 'versionName = "0.27.0"' app/build.gradle.kts
@@ -72,7 +75,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Tishe-v027-phq4-rotation-qa-evidence
+          name: Tishe-v027-assessment-durability-qa-evidence
           path: |
             ui-compile.log
             app/build/reports/androidTests/
