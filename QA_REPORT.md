@@ -34,3 +34,15 @@
 - Android emulator повторная попытка 42540960128: **SUCCESS 10 tests / 0 failures / 0 errors / 0 skipped**. XML artifact 13641521230, `app/build/outputs/androidTest-results/connected/debug/TEST-emulator-5554 - 15-_app-.xml`. Особенно `encryptedAnswerIsOnDiskWhenSaveReturns` PASS, `unconfirmedAnswerIsNotAdoptedAfterCommitFailure` PASS; старые 8 тестов PASS.
 - QA APK GitHub artifact 13641006960: `app-debug.apk` 11,099,265 bytes, SHA-256 `7a98b8b38094119605d9a1aeb7175ebbbe580769d1b38df7807ea6a89a14dca0`, ZIP CRC PASS, AndroidManifest + 4 DEX entries. applicationId `ru.tishe.app.results27`, version 0.27.0/code34. APK signing cert SHA-256 `e29246dca78a43c36b70bfc9eb1920041ab4ddbf90d5a5c4952ba8722a919871`.
 - Ограничения: ошибка коммита симулирована тестовым двойником, не реальным отказом флеш-памяти; физические устройства, power-loss, UI-latency при массовом заполнении анкет и безопасное обновление старой APK НЕ ПРОВЕРЕНЫ.
+
+## Android performance experiment — 2026-11-09
+- Source code for measurement-only QA: commit `6aafcfe5a6f58cc5acdfa652a13786cef3ac66f1` (new `AssessmentSaveLatencyTest` on isolated QA prefs; production unaffected).
+- GitHub Actions run https://github.com/Caprifan2078/tishe-android-/actions/runs/42545977930: Gradle `connectedDebugAndroidTest` SUCCESS, Android API35 emulator 11 tests / 0 failures, instrumentation includes 128 measured commits and warmups.
+- **Overall workflow FAILED only after successful Gradle test:** `adb shell run-as ru.tishe.app` -> unknown package; Gradle uninstalled target. Original `qa-assessment-latency.json` inside app not accessible after task. Logcat captured all 4 lines. Artifact 13643612156.
+- Extracted values (milliseconds, 32 samples each, with 4 warmups):
+  - 40: median 7.565; p95 23.053; max 23.668.
+  - 150: median 29.243; p95 54.326; max 80.443.
+  - 300: median 8.976; p95 31.493; max 62.041.
+  - 500: median 12.267; p95 68.814; max 75.029.
+- These are emulator-specific main-thread crypto + JSON + commit timings, not ANR frequency and not real device FPS. 150 being slower than 300 is evidence of run variability; do not infer monotonic growth.
+- Resolved extraction strategy: parse UTP per-test logcat on CI runner, validate expected sizes and sample count, emit JSON independent of installed package. Check the next workflow before marking pipeline PASS.

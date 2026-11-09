@@ -29,3 +29,10 @@
 - QA APK `Tishe-v0.27.0-durable-and-cache-protection-QA.apk`: 11,099,265 bytes, SHA-256 `7a98b8b38094119605d9a1aeb7175ebbbe580769d1b38df7807ea6a89a14dca0`. GitHub artifact 13641006960. VersionName 0.27.0/versionCode 34, package `ru.tishe.app.results27`. APK signing cert SHA-256 `e29246dca78a43c36b70bfc9eb1920041ab4ddbf90d5a5c4952ba8722a919871`.
 - В сравнении с предыдущей QA APK `v0.27 assessment durability` certificate `86de7ebdf40791ee5d06e996887b0767f9c2331a2488cfe30314144de15ba697`; сертификаты разные — нельзя обещать обновление поверх прежней установки.
 - Следующая задача: замеры p95 latency и отсутствие ANR при синхронной записи на устройствах; проектирование постоянного ключа обновлений с изолированными секретами и без удаления установленных данных. Main не изменять.
+
+## 2026-11-09 — UI latency measurement (QA)
+- База сохранного P0 кода `bee4e9e68cf2943469bb2aa1b51f71e5ca10e556`, измерительная ветка `qa/assessment-latency-benchmark-20261109`. Production source не менялся.
+- Android API35 emulator, Pixel 6 profile, 32 sync writes per size after 4 warmups: p95 in ms 40=23.053, 150=54.326, 300=31.493, 500=68.814. Median 7.565 / 29.243 / 8.976 / 12.267. Это timings одной прогонки, не hardware benchmark, не гарантия фактических FPS.
+- Источник: GitHub Actions run 42545977930, 11/11 Android UI tests PASS (внутри Gradle), overall workflow FAILURE из-за `run-as: unknown package: ru.tishe.app` уже ПОСЛЕ тестов. Gradle UTP сохранил per-test logcat в artifact 13643612156; `qa-results/assessment-latency-first-run.json` извлечён из него.
+- Исправлен CI extractor без повторного чтения приватных prefs: `scripts/extract-qa-assessment-latency.py` читает UTP logcat и создаёт JSON. Следующий CI запуск должен подтвердить всю цепочку.
+- Следующая инженерная задача: вынести подтверждаемую запись (commit) из UI-потока, но сначала спроектировать строгую сериализацию действий, блокировку повторных тапов до подтверждения, стабильное восстановление экрана и ошибку сохранения. Нельзя возвращаться к `apply()` для ответов и нельзя терять несколько быстрых ответов.

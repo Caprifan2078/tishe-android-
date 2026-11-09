@@ -24,3 +24,8 @@
 - `FailedCommitCacheSmokeTest`: имитация Editor.commit()=false после изменения RAM, затем проверка, что SecureStorage по-прежнему выдаёт последний подтверждённый ответ.
 - Первое QA падение связано с тестовой цепочкой Editor.putString; исправлена тестовая реализация (commit `b27ecbc`), повторный Android UI CI 42540960128 **10/10 PASS**.
 - Приложение v0.27.0/code34; не выполнялись merge в main, миграция, изменение схемы AES-GCM или публикация ключа.
+
+## 2026-11-09 — QA on-main write latency
+- Added `AssessmentSaveLatencyTest.kt` for 128 real main-thread encrypted writes in an isolated preference namespace, without changing customer data or product APK.
+- Added `scripts/extract-qa-assessment-latency.py` to collect numeric data from UTP logcat. Initial workflow failed after passing 11/11 UI because Gradle removed app before `run-as`; extraction repaired. Original evidence preserved in `qa-results/assessment-latency-first-run.json`.
+- First measurement p95: 23.053 / 54.326 / 31.493 / 68.814 ms for 40/150/300/500; off-main design is the next P1 task.

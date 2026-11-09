@@ -17,6 +17,7 @@ on:
       - 'scripts/FailedCommitCacheSmokeTest.kt'
       - 'scripts/AssessmentSaveLatencyTest.kt'
       - 'scripts/apply-qa-assessment-benchmark.py'
+      - 'scripts/extract-qa-assessment-latency.py'
       - 'scripts/AssessmentResumePositionTest.kt'
       - 'scripts/AssessmentResultEntryPolicy.kt'
       - '.github/workflows/android-ui-smoke.yml'
@@ -77,9 +78,10 @@ jobs:
           script: |
             set -e
             gradle --no-daemon --stacktrace :app:connectedDebugAndroidTest
-            adb shell run-as ru.tishe.app cat files/qa-assessment-latency.json > qa-assessment-latency.json
-            python3 -m json.tool qa-assessment-latency.json > /dev/null
-            cat qa-assessment-latency.json
+            # Gradle uninstalls the test app; read preserved per-test logcat instead.
+            python3 scripts/extract-qa-assessment-latency.py \
+              app/build/outputs/androidTest-results/connected/debug \
+              qa-assessment-latency.json
       - name: Upload emulator logs and screen test evidence
         if: always()
         uses: actions/upload-artifact@v4
