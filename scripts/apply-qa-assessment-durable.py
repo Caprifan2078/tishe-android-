@@ -50,6 +50,8 @@ if a.count('persist({ store.saveAssessment(next) }) { assessment = next }') < 3:
 if 'editDocument(durable = false) { it.put("assessment"' in s:
     raise RuntimeError("Unprotected assessment write found")
 
+s = once(s, "        } catch (error: Exception) {\n            documentCache = null // Never treat an unsuccessful write as persisted.\n            lastWrittenJson = null\n            pendingAsyncWrite = false\n            throw error\n        }", "        } catch (error: Exception) {\n            // SharedPreferences may expose an unconfirmed edit in process memory\n            // even if commit() reports failure. Keep our previous cached document:\n            // it is an isolated copy, not the candidate that failed to persist.\n            pendingAsyncWrite = true // Force a retry for the next durable write.\n            throw error\n        }", "failed commit cache protection")
+
 storage.write_text(s, encoding="utf-8")
 app.write_text(a, encoding="utf-8")
 
@@ -59,4 +61,9 @@ if test_root.is_dir():
     if target.exists():
         raise RuntimeError("Disk smoke test already installed")
     shutil.copyfile(Path("scripts") / target.name, target)
+    # Negative test: SharedPreferences reflects an unconfirmed edit in RAM after failed commit.
+    second = test_root / "FailedCommitCacheSmokeTest.kt"
+    if second.exists():
+        raise RuntimeError("Failed-commit smoke test already installed")
+    shutil.copyfile(Path("scripts") / second.name, second)
 print("Assessment answers are synchronous; cursor-only changes remain asynchronous")
