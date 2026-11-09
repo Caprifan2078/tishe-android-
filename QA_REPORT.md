@@ -57,3 +57,15 @@
 - 32 warm (4 excluded) / observed (32 included) writes per questionnaire length 40,150,300,500. Third-run p95 (ms) 94.983 / 57.352 / 68.246 / 67.370; median (ms) 27.869 / 11.930 / 25.287 / 25.307.
 - Three p95 results for 500: first 68.814, second 63.899, third 67.370 ms. Note emulator variability, cannot infer physical-device FPS or ANR.
 - Final result file `qa-results/assessment-latency-ci-pass.json`, artifact 13644246528. No product APK was built or version changed in this test-only iteration.
+
+## QA P1 off-main saving — 2026-11-10
+- Changes in `scripts/apply-qa-assessment-offmain.py`, `scripts/AssessmentAsyncWriter.kt`, `scripts/AssessmentAsyncWriterTest.kt`, code SHA `a0ad1e4025153fa31891864b6e51db9aa8f16ec0`. User JSON/Keystore alias/package/version unchanged; previous P0 durability fix retained.
+- Initial validation run 42723714076/13769/13676 failed at patch guard (expected 3 calls; four actual including initial journey checkpoint); corrected.
+- Second set 42723818519/18806/18954 failed at Kotlin compile due original trailing lambda argument position; corrected AssessmentAsyncWriter constructor (first dispatcher with default, last writer callback). No security/data-format changes.
+- Latest regular CI: https://github.com/Caprifan2078/tishe-android-/actions/runs/42723963967 **SUCCESS**.
+- Latest preview CI: https://github.com/Caprifan2078/tishe-android-/actions/runs/42723964171 **SUCCESS**. From artifact 13721259533, `app/build/reports/tests/testDebugUnitTest/index.html`: **130 tests 0 failures 0 ignored**; `lint-results-debug.txt`: **0 errors, 4 warnings**.
+- Latest emulator CI: https://github.com/Caprifan2078/tishe-android-/actions/runs/42723964260 **SUCCESS**. Downloaded artifact 13720494652, parsed Android JUnit XML `app/build/outputs/androidTest-results/connected/debug/TEST-emulator-5554 - 15-_app-.xml`: **13 tests, 0 failures, 0 errors, 0 skipped**.
+- NEW `AssessmentAsyncWriterTest.slowEncryptedWriteDoesNotBlockAndroidMainAndAcknowledgesOnlyAfterCompletion`: PASS (simulates blocked slow backend, Android main callback still runs, no premature acknowledgement). NEW `failedWritePropagatesAndNeverReportsSuccess`: PASS.
+- Original 11 test cases (including disk ciphertext, failed-commit cache, PHQ-4 recreation, navigation state and benchmark) all PASS.
+- Preview APK `ru.tishe.app.results27` version 0.27.0/code34, artifact 13721079757, extracted APK 11,099,265 bytes SHA-256 `67d68f989b35cdec31f9d3de70232a96ceb01200632c3704d9443f49e3f9704d`, CRC PASS, manifest present, 4 DEX present.
+- Limits: test's blocked backend is synthetic; actual UI E2E with slow SharedPreferences and hardware p95 not yet tested. Existing latency benchmark still measures direct synchronous SecureStorage from a test thread deliberately placed on main, not the reworked UI; do not use its metrics as post-fix UI latency.
