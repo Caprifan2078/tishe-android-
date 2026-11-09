@@ -9,5 +9,10 @@
 ## QA patch (2026-11-09)
 - Статическая проверка: сравнение точного выражения remember(module.id), обязательного импорта rememberSaveable и Android test anchor, fail-fast при изменённой базе.
 - Добавленная регрессия: phq4AgeAcknowledgementSurvivesActivityRecreation — открытие PHQ-4, подтверждение 18+, вопрос 1, Activity recreation, отсутствие повторного возрастного экрана.
-- GitHub build: ОЖИДАЕТСЯ. Android UI: ОЖИДАЕТСЯ. Не писать PASS до независимой проверки CI.
+- GitHub Preview CI: PASS, 42538073673, versionName 0.27.0 / versionCode 34, package ru.tishe.app.results27, 130 JUnit / 0 failures / 0 ignored, Android Lint 0 errors / 4 warnings.
+- GitHub Regular CI: PASS, 42538073711, app ru.tishe.app, compiled successfully. Signing identity is still not proven compatible with installed versions.
+- GitHub emulator UI CI: PASS, 42538073966, Android API35 emulator, 8/8 instrumented cases, failures=0 errors=0 skipped=0. Evidence: app/build/outputs/androidTest-results/connected/debug/TEST-emulator-5554 - 15-_app-.xml from artifact 13640256555.
+- New test phq4AgeAcknowledgementSurvivesActivityRecreation is present in the XML result, PASS. Baseline previously had 7 tests.
+- QA Preview APK artifact 13640646058: SHA-256 bfa152e65dcbd44f08a8869900b778e4cabc28dc2dc3431a2f45ef56ade9e4ce, APK zip CRC PASS (AndroidManifest.xml and classes.dex present).
+- All run results apply to commit b216c6d201bd82e4663563947a1efd0c49e4bd69, not the later documentation-only checkpoint.
 - Физическое устройство, безопасный update, process death после force-stop, TalkBack: НЕ ПРОВЕРЕНО.
