@@ -94,4 +94,54 @@ class AssessmentOffMainUiTest {
             context.deleteSharedPreferences(testName)
         }
     }
+
+    /** Failure in the off-main initial checkpoint must never open an unsaved journey. */
+    @Test fun failedCommitDoesNotOpenQuestionnaireOrAcknowledgeProgress() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val testName = "tishe_qa_offmain_failed_v1"
+        val real = context.getSharedPreferences(testName, Context.MODE_PRIVATE)
+        assertTrue(real.edit().clear().commit())
+        val failed = object : SharedPreferences by real {
+            override fun edit(): SharedPreferences.Editor {
+                val editor = real.edit()
+                return object : SharedPreferences.Editor by editor {
+                    override fun putString(key: String?, value: String?): SharedPreferences.Editor {
+                        editor.putString(key, value)
+                        return this
+                    }
+                    override fun commit(): Boolean {
+                        assertFalse("A failed write must still run outside the main thread",
+                            Looper.myLooper() == Looper.getMainLooper())
+                        // Simulate a failure *after* SharedPreferences RAM changes.
+                        editor.apply()
+                        return false
+                    }
+                }
+            }
+        }
+        val isolatedContext = object : ContextWrapper(context) {
+            override fun getSharedPreferences(name: String?, mode: Int): SharedPreferences = failed
+        }
+        try {
+            val storage = SecureStorage(isolatedContext)
+            compose.setContent { TisheApp(storage) }
+            compose.waitUntil(30000L) {
+                compose.onAllNodesWithTag("nav_profile").fetchSemanticsNodes().isNotEmpty()
+            }
+            compose.onNodeWithTag("nav_profile").performClick()
+            compose.onNodeWithTag("profile_test_list")
+                .performScrollToNode(hasText("Начальный · 40"))
+            compose.onNodeWithText("Начальный · 40").performClick()
+            compose.waitUntil(30000L) {
+                compose.onAllNodesWithText("Не удалось сохранить данные")
+                    .fetchSemanticsNodes().isNotEmpty()
+            }
+            compose.onNodeWithText("вопрос 1 из 40", substring = true).assertDoesNotExist()
+            assertTrue("Unconfirmed position must not become an acknowledged checkpoint",
+                storage.loadAssessment().journeyPositions.isEmpty())
+        } finally {
+            real.edit().clear().commit()
+            context.deleteSharedPreferences(testName)
+        }
+    }
 }
