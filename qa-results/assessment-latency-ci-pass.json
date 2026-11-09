@@ -1,0 +1,43 @@
+{
+  "format": "tishe-assessment-main-thread-latency-v1",
+  "runner": "GitHub Actions Android emulator, API 35, Pixel 6 profile",
+  "timingScope": "AES-GCM + JSON snapshot + SharedPreferences.commit on main thread",
+  "samplesPerSize": 32,
+  "warmupPerSize": 4,
+  "testLogSource": "logcat-ru.tishe.app.AssessmentSaveLatencyTest-benchmarkDurableWritesWithFortyToFiveHundredAnswers.txt",
+  "measurements": [
+    {
+      "questionCount": 40,
+      "samples": 32,
+      "medianMs": 27.869,
+      "p95Ms": 94.983,
+      "maxMs": 120.143,
+      "minMs": 3.077
+    },
+    {
+      "questionCount": 150,
+      "samples": 32,
+      "medianMs": 11.93,
+      "p95Ms": 57.352,
+      "maxMs": 58.04,
+      "minMs": 3.477
+    },
+    {
+      "questionCount": 300,
+      "samples": 32,
+      "medianMs": 25.287,
+      "p95Ms": 68.246,
+      "maxMs": 96.887,
+      "minMs": 4.219
+    },
+    {
+      "questionCount": 500,
+      "samples": 32,
+      "medianMs": 25.307,
+      "p95Ms": 67.37,
+      "maxMs": 74.576,
+      "minMs": 8.527
+    }
+  ],
+  "source": "GitHub Actions SUCCESS run 42547438087, artifact 13644246528"
+}

@@ -33,3 +33,7 @@
 ## QA 2026-11-09 — latency repeat and extractor invocation
 - Second 11/11 emulator pass; main-thread 500-question p95 63.899 ms, confirming previous 68.814 ms risk.
 - Fixed CI invocation: one shell line for Python logcat extractor (runner script does not support line-joined arguments). Original evidence preserved.
+
+## 2026-11-09 — latency measurement QA signed off
+- Fixed extraction pipeline to rely on Gradle per-test logcat, validated input, one-line runner command. GitHub workflow 42547438087 SUCCESS, 11/11 Android instrumentation tests, JSON evidence archived.
+- Three independent repeated benchmarks show 500-question p95 ~64–69 ms; upcoming task is risk-controlled off-main storage, not reverting durable commit to apply().

@@ -51,3 +51,9 @@
 - Second emulator run 42546915760: **11/11 Android tests PASS** per XML report (0 failures, 0 errors, 0 skipped), benchmark test duration 3.101 s. Overall workflow again FAILED **only after successful Gradle**: `reactivecircus/android-emulator-runner` executes each script line separately, so line continuation `\` passed no args to Python extractor.
 - Full UTP logcat artifact 13643543769 was downloaded; extractor ran locally SUCCESS. p95(ms): 40=32.953, 150=58.466, 300=34.600, 500=63.899; median(ms): 11.570/10.649/9.115/22.917. Source `qa-results/assessment-latency-second-run.json`.
 - Corrected workflow to invoke `python3 scripts/extract-qa-assessment-latency.py <results-dir> <output>` on ONE script line. No production source changes. Re-run required to confirm whole CI goes green.
+
+## Full CI latency pipeline verified — 2026-11-09
+- Run https://github.com/Caprifan2078/tishe-android-/actions/runs/42547438087 — **SUCCESS**, Android emulator API35, 11/11 UI/instrumentation tests, no failures/errors/skips. JSON extraction PASS from UTP logcat after connectedDebugAndroidTest, artifact 13644246528.
+- 32 warm (4 excluded) / observed (32 included) writes per questionnaire length 40,150,300,500. Third-run p95 (ms) 94.983 / 57.352 / 68.246 / 67.370; median (ms) 27.869 / 11.930 / 25.287 / 25.307.
+- Three p95 results for 500: first 68.814, second 63.899, third 67.370 ms. Note emulator variability, cannot infer physical-device FPS or ANR.
+- Final result file `qa-results/assessment-latency-ci-pass.json`, artifact 13644246528. No product APK was built or version changed in this test-only iteration.

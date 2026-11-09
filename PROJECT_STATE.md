@@ -40,3 +40,10 @@
 ### QA latency second run — 2026-11-09
 - 42546915760: 11/11 Android emulator tests passed; p95 32.953, 58.466, 34.600, 63.899 ms at 40/150/300/500. Overall CI failed in postprocessing due multi-line shell command, not app. Evidence artifact 13643543769, machine-readable JSON in `qa-results/assessment-latency-second-run.json`.
 - Corrected extraction invocation into one line. Await next CI. Production app code remains unchanged.
+
+## Подтверждённая контрольная точка — latency CI 2026-11-09
+- QA branch: `qa/assessment-latency-benchmark-20261109`; application production code не изменялся; база предыдущих исправлений `bee4e9e68cf2943469bb2aa1b51f71e5ca10e556`.
+- GitHub Actions https://github.com/Caprifan2078/tishe-android-/actions/runs/42547438087 — **SUCCESS**, 11/11 Android emulator UI tests, 0 failures/errors/skips, бенчмарк+автоматический JSON extraction PASS. Artifact 13644246528.
+- Заключительный p95 main-thread (ms): 40=94.983, 150=57.352, 300=68.246, 500=67.370. Эти цифры меняются между прогонами, но все три запуска фиксировали p95 больше 16.7 ms; UI jank вероятен. Не переводить ответы на apply() и не обходить проверку commit().
+- Machine-readable: `qa-results/assessment-latency-ci-pass.json`.
+- Next P1 engineering iteration: serial off-main assessment saving, stable screen during save, preserve acknowledged answers, fail/report on IO error, tests for rapid taps/rotation/cursor, measure responsiveness; keep QA, main untouched. P0 stable APK signing remains open.
