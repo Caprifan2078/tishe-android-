@@ -18,3 +18,9 @@
 - `scripts/AssessmentDurableDiskSmokeTest.kt` adds a real Android file-system regression. Existing 8 UI tests retained.
 - GitHub Actions: regular 42539551427 SUCCESS; preview 42539551472 SUCCESS; emulator 42539551445 SUCCESS (9/9). JUnit 130/130.
 - Remaining: avoid UI-thread fsync stalls before production; stable signing / migration and physical QA unresolved.
+
+## 2026-11-09 — защитить cached document после неудачного commit
+- Исходный catch обнулял documentCache, после чего SharedPreferences в RAM мог возвращать ещё не подтверждённый ciphertext как уже сохранённый. Теперь предыдущий изолированный объект оставляется, а следующая durable запись не пропускается.
+- `FailedCommitCacheSmokeTest`: имитация Editor.commit()=false после изменения RAM, затем проверка, что SecureStorage по-прежнему выдаёт последний подтверждённый ответ.
+- Первое QA падение связано с тестовой цепочкой Editor.putString; исправлена тестовая реализация (commit `b27ecbc`), повторный Android UI CI 42540960128 **10/10 PASS**.
+- Приложение v0.27.0/code34; не выполнялись merge в main, миграция, изменение схемы AES-GCM или публикация ключа.

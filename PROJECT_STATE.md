@@ -20,3 +20,12 @@
 - Preview APK: SHA-256 `c6d3c678b62f4b7293d51c44525c95469be7622b17765d33285c9fe6c104f622`, размер 11 099 265 bytes; это QA, НЕ release.
 - Доказательства: https://github.com/Caprifan2078/tishe-android-/actions/runs/42539551427, https://github.com/Caprifan2078/tishe-android-/actions/runs/42539551472, https://github.com/Caprifan2078/tishe-android-/actions/runs/42539551445.
 - Следующий риск: `commit()` вместе с AES-GCM по-прежнему работает в UI-потоке; performance slow devices / ANR не измерены. Не делать слияние, пока не оценены latency и коррекция последовательных быстрых ответов. Стабильная подпись старых APK не решена.
+
+## Подтверждённый итог 2026-11-09: хранение ответов
+- Production-code QA commit `ee14d4e851148e1d6191277a3ce80fc78d65a29d`: `saveAssessment` по умолчанию durable; только cursor move остаётся async; при false/exception из save() оставляется последний подтверждённый `documentCache`, следующая durable запись вынудит новую попытку.
+- QA test correction `b27ecbc81d9d1a753127159574ec06cac1ca7529`: редактор фейкового SharedPreferences возвращает сам себя после putString, гарантируя перехват commit().
+- CI: regular build `42540430991` success; preview `42540430895` success; JUnit 130/130; Lint 0 errors / 4 warnings. Emulator `42540960128` success, **10/10** UI/Android tests.
+- Первый emulator run `42540431052` FAILED: тестовый двойник ошибочно обходил `commit()` через `putString()`; исправлено только в тесте, новая регрессия прошла.
+- QA APK `Tishe-v0.27.0-durable-and-cache-protection-QA.apk`: 11,099,265 bytes, SHA-256 `7a98b8b38094119605d9a1aeb7175ebbbe580769d1b38df7807ea6a89a14dca0`. GitHub artifact 13641006960. VersionName 0.27.0/versionCode 34, package `ru.tishe.app.results27`. APK signing cert SHA-256 `e29246dca78a43c36b70bfc9eb1920041ab4ddbf90d5a5c4952ba8722a919871`.
+- В сравнении с предыдущей QA APK `v0.27 assessment durability` certificate `86de7ebdf40791ee5d06e996887b0767f9c2331a2488cfe30314144de15ba697`; сертификаты разные — нельзя обещать обновление поверх прежней установки.
+- Следующая задача: замеры p95 latency и отсутствие ANR при синхронной записи на устройствах; проектирование постоянного ключа обновлений с изолированными секретами и без удаления установленных данных. Main не изменять.
