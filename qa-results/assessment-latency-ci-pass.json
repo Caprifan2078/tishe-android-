@@ -12,7 +12,7 @@
       "medianMs": 27.869,
       "p95Ms": 94.983,
       "maxMs": 120.143,
-      "minMs": 3.077
+      "minMs": 3.476
     },
     {
       "questionCount": 150,
@@ -20,7 +20,7 @@
       "medianMs": 11.93,
       "p95Ms": 57.352,
       "maxMs": 58.04,
-      "minMs": 3.477
+      "minMs": 3.716
     },
     {
       "questionCount": 300,
@@ -28,7 +28,7 @@
       "medianMs": 25.287,
       "p95Ms": 68.246,
       "maxMs": 96.887,
-      "minMs": 4.219
+      "minMs": 6.019
     },
     {
       "questionCount": 500,
@@ -36,7 +36,7 @@
       "medianMs": 25.307,
       "p95Ms": 67.37,
       "maxMs": 74.576,
-      "minMs": 8.527
+      "minMs": 8.409
     }
   ],
   "source": "GitHub Actions SUCCESS run 42547438087, artifact 13644246528"
