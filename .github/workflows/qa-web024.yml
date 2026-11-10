@@ -1,8 +1,8 @@
-name: QA Tishe Web 0.2.4 integrity and dedup
+name: QA Tishe Web 0.2.5 all results and save confirmation
 on:
   push:
-    branches: ['qa/web024-quality-dedup-20261105']
-    paths: ['index.html', '.github/workflows/qa-web024.yml', 'docs/WEB024_QUALITY_QA_RU.md']
+    branches: ['qa/web024-quality-dedup-20261105', 'qa/web025-results-20261110']
+    paths: ['index.html', '.github/workflows/qa-web024.yml', 'docs/WEB024_QUALITY_QA_RU.md', 'scripts/qa-web025-results.js']
   workflow_dispatch:
 permissions:
   contents: read
@@ -20,7 +20,7 @@ jobs:
           from pathlib import Path
           s=Path('index.html').read_text(encoding='utf-8')
           assert s.startswith('<!DOCTYPE html>')
-          assert 'Web 0.2.4' in s
+          assert 'Web 0.2.5' in s
           assert s.count('<script')==s.count('</script>')
           b=re.search(r'<script type="application/json" id="tishe-data">(.*?)</script>',s,re.S)
           assert b, 'Cannot find original question bank'
@@ -47,10 +47,12 @@ jobs:
           PY
           node --check /tmp/tishe-qa.js
           wc -c index.html
+      - name: Verify real results for all 48 modules and 4 long test modes
+        run: node scripts/qa-web025-results.js index.html
       - name: Publish offline QA HTML artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Tishe-Web-0.2.4-quality-QA
+          name: Tishe-Web-0.2.5-all-results-QA
           path: index.html
           if-no-files-found: error
           retention-days: 30
