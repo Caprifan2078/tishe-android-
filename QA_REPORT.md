@@ -69,3 +69,11 @@
 - Original 11 test cases (including disk ciphertext, failed-commit cache, PHQ-4 recreation, navigation state and benchmark) all PASS.
 - Preview APK `ru.tishe.app.results27` version 0.27.0/code34, artifact 13721079757, extracted APK 11,099,265 bytes SHA-256 `67d68f989b35cdec31f9d3de70232a96ceb01200632c3704d9443f49e3f9704d`, CRC PASS, manifest present, 4 DEX present.
 - Limits: test's blocked backend is synthetic; actual UI E2E with slow SharedPreferences and hardware p95 not yet tested. Existing latency benchmark still measures direct synchronous SecureStorage from a test thread deliberately placed on main, not the reworked UI; do not use its metrics as post-fix UI latency.
+
+## Full questionnaire result coverage — 2026-11-10
+- GitHub Actions: https://github.com/Caprifan2078/tishe-android-/actions/runs/42727746462 **SUCCESS**, branch `qa/results-all-tests-20261110`, test-only commit `cd318232c728ecba5e7c15b7e6a2a22dfbd72fe3`.
+- XML artifact ID **13723796402**: `app/build/outputs/androidTest-results/connected/debug/TEST-emulator-5554 - 15-_app-.xml`, **tests 16, failures 0, errors 0, skipped 0**.
+- Added `AllResultsUiRegressionTest`: (1) `allIndividualCompletedTestsShowSubstantiveReports` — iterates all 48 modules, verifies report title, direct conclusion and next step; (2) `everyIndividualTestOpensResultAfterLastAnswer` — 48 last-answer clicks and report transitions; (3) `allFourLongModesOpenRealResultAfterLastAnswer` — 40/150/300/500 last-answer navigation and complete result.
+- PHQ-4 adult confirmation preserved; 13 earlier Android instrumentation tests PASS. This supplements existing **130/130 JUnit** from 42723964171; no new production APK in this test-only branch.
+- Limitations: automated Compose emulator, not physical Android device; flow tests synchronously inject answer map, while existing E2E smoke tests cover actual encrypted app and off-main IO. Not a claim of clinical validity or Android release readiness.
+- Web HTML 0.2.5: 48 modules + 4 long reports verified in Node.js VM; completed-save guard and test rollback on synthetic crypto error; `qa/web025-results-20261110` GitHub CI **42728175549 SUCCESS**; publish commit b874648 (gh-pages), same Git blob SHA as local HTML.

@@ -43,3 +43,8 @@
 - Migrated questionnaire answers, cursor moves, first Journey checkpoint and preferences away from direct main-thread save; modal UI prevents stale repeat taps during operation, recoverable error dialog retained.
 - No change to encryption, data schema, installed package identity or version number.
 - GitHub CI: 42723963967 regular PASS; 42723964171 preview PASS; JUnit 130/130; Lint 0 errors/4 warnings; 42723964260 emulator 13/13 PASS. See `QA_REPORT.md` for full proof/limits.
+
+## 2026-11-10 — QA: guaranteed visible results
+- Added Android Compose regression `AllResultsUiRegressionTest.kt` and fail-fast installer `apply-qa-all-results-test.py` in QA branch. Checks 48 module reports, 48 last-answer transitions and final report actions for 40/150/300/500; keeps PHQ-4 adult consent.
+- Android emulator CI **16/16 PASS** (42727746462, artifact 13723796402); no production Kotlin code or encrypted persistence format modified.
+- Web branch published separately: 0.2.5 with only save confirmation and rollback changes; all 52 report routes PASS (42728175549). Existing localStorage key remains unchanged.
