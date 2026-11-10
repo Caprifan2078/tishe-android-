@@ -37,3 +37,9 @@
 ## 2026-11-09 — latency measurement QA signed off
 - Fixed extraction pipeline to rely on Gradle per-test logcat, validated input, one-line runner command. GitHub workflow 42547438087 SUCCESS, 11/11 Android instrumentation tests, JSON evidence archived.
 - Three independent repeated benchmarks show 500-question p95 ~64–69 ms; upcoming task is risk-controlled off-main storage, not reverting durable commit to apply().
+
+## 2026-11-10 — QA off-main questionnaire save
+- Added `AssessmentAsyncWriter`: secure synchronized full-document write runs on IO dispatcher; resumed Compose UI commits the answer only after checked durable persistence.
+- Migrated questionnaire answers, cursor moves, first Journey checkpoint and preferences away from direct main-thread save; modal UI prevents stale repeat taps during operation, recoverable error dialog retained.
+- No change to encryption, data schema, installed package identity or version number.
+- GitHub CI: 42723963967 regular PASS; 42723964171 preview PASS; JUnit 130/130; Lint 0 errors/4 warnings; 42723964260 emulator 13/13 PASS. See `QA_REPORT.md` for full proof/limits.

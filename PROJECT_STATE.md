@@ -47,3 +47,13 @@
 - Заключительный p95 main-thread (ms): 40=94.983, 150=57.352, 300=68.246, 500=67.370. Эти цифры меняются между прогонами, но все три запуска фиксировали p95 больше 16.7 ms; UI jank вероятен. Не переводить ответы на apply() и не обходить проверку commit().
 - Machine-readable: `qa-results/assessment-latency-ci-pass.json`.
 - Next P1 engineering iteration: serial off-main assessment saving, stable screen during save, preserve acknowledged answers, fail/report on IO error, tests for rapid taps/rotation/cursor, measure responsiveness; keep QA, main untouched. P0 stable APK signing remains open.
+
+## QA P1 off-main assessment writes — 2026-11-10 (GitHub CI UTC 2026-11-09)
+- Рабочая ветка `qa/assessment-offmain-20261110`; production-code fix `a0ad1e4025153fa31891864b6e51db9aa8f16ec0`, основан на QA benchmark checkpoint bb0cc421653d79fbc0b5ac140c2641b50a45d94f.
+- Пяти операциям с анкетами (ответ длинной анкеты, переход между вопросами, ответ отдельного опроса, первое открытие Journey и настройки) обеспечен один async UI механизм через `AssessmentAsyncWriter` с `withContext(Dispatchers.IO)`; по-прежнему сохраняет ответы с проверкой `SharedPreferences.commit()`, без перехода на `apply()`.
+- UI не изменяет подтверждённые ответы/настройки до успеха записи; во время записи модальное сообщение и gate предотвращают действия над устаревшими snapshot. Новый Journey открывается только после успешного checkpoint; системный Back блокируется. Ошибка показывает старый диалог, прежние данные остаются.
+- Сборки: regular https://github.com/Caprifan2078/tishe-android-/actions/runs/42723963967 PASS, preview https://github.com/Caprifan2078/tishe-android-/actions/runs/42723964171 PASS, JUnit 130/130, Android Lint 0 ошибок/4 предупреждения.
+- Эмулятор Android API35 https://github.com/Caprifan2078/tishe-android-/actions/runs/42723964260 PASS, XML 13/13 tests (0 failed, 0 errors, 0 skipped): 11 существовавших + 2 новых на off-main и propagation of failed save. CI artifact 13720494652.
+- QA preview APK artifact 13721079757: `Tishe-v0.27.0-offmain-safe-save-QA.apk`, 11,099,265 bytes, SHA-256 `67d68f989b35cdec31f9d3de70232a96ceb01200632c3704d9443f49e3f9704d`, Zip CRC PASS, package `ru.tishe.app.results27`, versionName 0.27.0 / code34. Новая тестовая APK не является обновлением установленного приложения; debug подписывание может не совпасть с предыдущим.
+- Основной `main` не менялся, PR draft #10 в предыдущую QA ветку.
+- Остаточные риски: физическое Android устройство, быстрые тап-сценарии под медленным flash, rotation/cancellation во время блокированного commit, производительность остальных синхронных сохранений (дневник, настройки компаса), стабильная подпись для апдейтов.

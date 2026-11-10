@@ -34,3 +34,11 @@
 - [x] Три независимых измерения Android API35; последний зелёный CI 42547438087 (11/11), JSON artifact 13644246528; p95 для 500 вопросов 68.814 / 63.899 / 67.370 ms.
 - [x] Исправлен CI extraction: UTP logcat вместо удалённого APK/run-as, одна команда Python; локально валидированы неверные и неполные метрики.
 - [ ] Следующий P1: off-main thread для saveAssessment с последовательной подтверждаемой записью, без потери ответов; обязательный regression test и повторный benchmark.
+
+## P1 off-main saving checkpoint — 2026-11-10
+- [x] Вынести пять операций `saveAssessment` из UI thread с `Dispatchers.IO`, сохранить `commit()` как подтверждение реальных ответов: commit `a0ad1e4025153fa31891864b6e51db9aa8f16ec0`, 2 APK CI PASS.
+- [x] Визуальная защита от повторных тапов и Back до подтверждения, существующее диалоговое сообщение об ошибке, старое состояние при отказе.
+- [x] Android emulator 13/13 PASS с новым main-thread responsiveness slow-writer test и error-propagation test; JUnit 130/130, Lint 0 errors.
+- [ ] Полноценный Compose E2E со специально задержанным реальным SharedPreferences.commit(), серия быстрых тапов/Back и Activity recreation в ходе записи.
+- [ ] QA на физических Android 8+, 12+, 15+ устройствах, измерение времени отклика и UX модального индикатора.
+- [ ] P0: стабильная подпись APK и обновление установленной версии без удаления защищённых данных.
