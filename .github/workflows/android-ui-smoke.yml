@@ -8,6 +8,7 @@ on:
       - 'qa/assessment-durable-20261109'
       - 'qa/assessment-latency-benchmark-20261109'
       - 'qa/assessment-offmain-20261110'
+      - 'qa/results-all-tests-20261111'
     paths:
       - 'scripts/QuestionnaireUiSmokeTest.kt'
       - 'scripts/apply-v027-ui-tests.py'
@@ -17,6 +18,8 @@ on:
       - 'scripts/apply-qa-assessment-offmain.py'
       - 'scripts/AssessmentAsyncWriter.kt'
       - 'scripts/AssessmentAsyncWriterTest.kt'
+      - 'scripts/EveryAssessmentReportUiTest.kt'
+      - 'scripts/apply-qa-results-catalog-smoke.py'
       - 'scripts/AssessmentDurableDiskSmokeTest.kt'
       - 'scripts/FailedCommitCacheSmokeTest.kt'
       - 'scripts/AssessmentSaveLatencyTest.kt'
@@ -43,7 +46,7 @@ jobs:
           base64 --decode project-source.b64 > /tmp/tishe-project.zip
           unzip -t /tmp/tishe-project.zip
           unzip -oq /tmp/tishe-project.zip -d .
-          for script in             scripts/apply-redesign-v015.py             scripts/apply-v016.py scripts/apply-v017.py scripts/apply-v018.py             scripts/apply-v019.py scripts/apply-v020.py scripts/apply-v021.py             scripts/apply-v022.py scripts/apply-v023.py scripts/apply-v024.py             scripts/apply-v025.py scripts/apply-v026.py scripts/apply-v027-navigation.py             scripts/apply-v027-ui-tests.py scripts/apply-qa-phq4-rotation.py scripts/apply-qa-assessment-durable.py scripts/apply-qa-assessment-offmain.py scripts/apply-qa-assessment-benchmark.py; do
+          for script in             scripts/apply-redesign-v015.py             scripts/apply-v016.py scripts/apply-v017.py scripts/apply-v018.py             scripts/apply-v019.py scripts/apply-v020.py scripts/apply-v021.py             scripts/apply-v022.py scripts/apply-v023.py scripts/apply-v024.py             scripts/apply-v025.py scripts/apply-v026.py scripts/apply-v027-navigation.py             scripts/apply-v027-ui-tests.py scripts/apply-qa-phq4-rotation.py scripts/apply-qa-assessment-durable.py scripts/apply-qa-assessment-offmain.py scripts/apply-qa-assessment-benchmark.py scripts/apply-qa-results-catalog-smoke.py; do
             python3 "$script"
           done
           grep -F 'versionName = "0.27.0"' app/build.gradle.kts
@@ -88,7 +91,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Tishe-v027-assessment-offmain-qa-evidence
+          name: Tishe-v027-every-report-qa-evidence
           path: |
             ui-compile.log
             qa-assessment-latency.json

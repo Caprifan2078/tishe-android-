@@ -69,3 +69,13 @@
 - Original 11 test cases (including disk ciphertext, failed-commit cache, PHQ-4 recreation, navigation state and benchmark) all PASS.
 - Preview APK `ru.tishe.app.results27` version 0.27.0/code34, artifact 13721079757, extracted APK 11,099,265 bytes SHA-256 `67d68f989b35cdec31f9d3de70232a96ceb01200632c3704d9443f49e3f9704d`, CRC PASS, manifest present, 4 DEX present.
 - Limits: test's blocked backend is synthetic; actual UI E2E with slow SharedPreferences and hardware p95 not yet tested. Existing latency benchmark still measures direct synchronous SecureStorage from a test thread deliberately placed on main, not the reworked UI; do not use its metrics as post-fix UI latency.
+
+
+## All-results Android UI coverage (2026-11-11)
+- Source: `scripts/EveryAssessmentReportUiTest.kt` copied by `scripts/apply-qa-results-catalog-smoke.py` into Android instrumented tests after existing v0.27 / PHQ-4 / durable / off-main patches.
+- First attempt https://github.com/Caprifan2078/tishe-android-/actions/runs/43012301792 : Gradle assembled, 14/15 tests PASS, one new test FAIL due first module test initialized with empty answers and later reassigned partial answers, leaving old cursor. NOT a demonstrated app failure. QA source repaired in commit `da52ddb4dc094ff2899b38ac987ce349b688faf5`.
+- Final https://github.com/Caprifan2078/tishe-android-/actions/runs/43013180435 : **SUCCESS**, Android emulator API35, Gradle connected test **15 tests / 0 failures / 0 errors / 0 skipped**. Artifact **13851368556**, XML evidence `app/build/outputs/androidTest-results/connected/debug/TEST-emulator-5554 - 15-_app-.xml`.
+- New case `everyStandaloneLastQuestionOpensRealConclusion`: 48 catalog modules, last question answered through Compose, `К результатам` clicked, result screen title and direct conclusion present; passed in 25.503 seconds.
+- New case `allFourJourneyFinalQuestionsOpenRealReport`: 40/150/300/500, last question answered and `К результатам` clicked; report `Твои результаты` and `Итог теста` present; passed in 6.987 seconds.
+- Previous 13 tests passed, including Android Keystore persistence and off-main slow/failed write tests. This validates real Android UI on emulator, NOT the physical phone, external accessibility, stable signing, or mid-write Activity recreation.
+- No consumer APK code changed: last verified QA debug APK `Tishe-v0.27.0-offmain-safe-save-QA.apk` (preview artifact 13721079757) still applies. APK does NOT promise in-place upgrade over a differently signed installation.
