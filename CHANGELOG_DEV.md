@@ -43,3 +43,8 @@
 - Migrated questionnaire answers, cursor moves, first Journey checkpoint and preferences away from direct main-thread save; modal UI prevents stale repeat taps during operation, recoverable error dialog retained.
 - No change to encryption, data schema, installed package identity or version number.
 - GitHub CI: 42723963967 regular PASS; 42723964171 preview PASS; JUnit 130/130; Lint 0 errors/4 warnings; 42723964260 emulator 13/13 PASS. See `QA_REPORT.md` for full proof/limits.
+
+
+## 2026-11-11 — full Android report QA and HTML 0.2.5
+- Added Android QA-only Compose test across all 48 survey modules and 4 journey modes. Initial setup false-positive corrected (same module initially opened with no answers); rerun success 15/15 on API35 emulator, CI 43013180435. No Android application code or data changes.
+- Separate web QA 0.2.5 branch: wait for encryption before navigation, suppress overlapping input, show result on last complete answer and reject premature PHQ-4/IPIP completion; 48+4 UI coverage in local Chromium and green static GitHub workflow 43013436451. Web and Android remain independent local stores.

@@ -57,3 +57,12 @@
 - QA preview APK artifact 13721079757: `Tishe-v0.27.0-offmain-safe-save-QA.apk`, 11,099,265 bytes, SHA-256 `67d68f989b35cdec31f9d3de70232a96ceb01200632c3704d9443f49e3f9704d`, Zip CRC PASS, package `ru.tishe.app.results27`, versionName 0.27.0 / code34. Новая тестовая APK не является обновлением установленного приложения; debug подписывание может не совпасть с предыдущим.
 - Основной `main` не менялся, PR draft #10 в предыдущую QA ветку.
 - Остаточные риски: физическое Android устройство, быстрые тап-сценарии под медленным flash, rotation/cancellation во время блокированного commit, производительность остальных синхронных сохранений (дневник, настройки компаса), стабильная подпись для апдейтов.
+
+
+## QA: end-to-end results for every Android questionnaire (2026-11-11)
+- Branch `qa/results-all-tests-20261111` based on `qa/assessment-offmain-20261110`. Production code unchanged; no release claim; `main` untouched.
+- New Android Compose test suite `EveryAssessmentReportUiTest`: `everyStandaloneLastQuestionOpensRealConclusion` iterates all **48** SurveyModule IDs and verifies selected final answer -> user button `К результатам` -> rendered `Результат опроса`/`Итог теста` and nonempty headline/explanation/next step; adult PHQ-4 consent included. `allFourJourneyFinalQuestionsOpenRealReport` verifies 40/150/300/500 last answer -> `Твои результаты` and `Итог теста`.
+- Android emulator GitHub Actions https://github.com/Caprifan2078/tishe-android-/actions/runs/43013180435 **SUCCESS**, XML artifact 13851368556 **15/15 PASS**, failures=0/errors=0/skipped=0. Previous 13 tests retained.
+- First run 43012301792 failed only new test harness: first module rendered from empty answers before partial answers were injected, so `rememberSaveable` cursor remained at first question. Changed test initial state (`da52ddb...`), second run fully PASS; no production code patch required.
+- HTML separately: `qa/web025-results-20261111`, commit `60c6063b...`; Web QA run 43013436451 SUCCESS. New 0.2.5 gates unconfirmed answers, gives full result after final answer; local Chromium verified 156 outcome scenarios, 48/48 module UI and 4/4 journey UI, no JS errors. This is separate storage, not synced with Android.
+- Remaining P0/P1: stable Android APK signing/in-place update, real device acceptance (font sizes/TalkBack), process recreation while IO commit is blocked and actual vault backup/recovery on iPhone. Do not uninstall production installation with private data.

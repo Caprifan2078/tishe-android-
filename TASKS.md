@@ -42,3 +42,12 @@
 - [ ] Полноценный Compose E2E со специально задержанным реальным SharedPreferences.commit(), серия быстрых тапов/Back и Activity recreation в ходе записи.
 - [ ] QA на физических Android 8+, 12+, 15+ устройствах, измерение времени отклика и UX модального индикатора.
 - [ ] P0: стабильная подпись APK и обновление установленной версии без удаления защищённых данных.
+
+
+## QA results completeness 2026-11-11
+- [x] All 48 individual modules render an actual conclusion after a final answer + Results click on Android Compose (GitHub Actions 43013180435, 15/15).
+- [x] All 40/150/300/500 journey modes render a result after final question via their real button; four pathways checked in the same green run.
+- [x] HTML Web 0.2.5, all 48 module UI results and four full journey UI results checked in local Chromium, plus 156 synthetic outcomes. QA branch `qa/web025-results-20261111`, GitHub CI 43013436451 SUCCESS.
+- [ ] Android QA: delay the real IO commit, tap rapidly, rotate/recreate in the middle of saving; verify no acknowledged answer disappears and later action is not silently lost. Needs targeted real app regression.
+- [ ] iPhone Safari: offline file vs HTTPS crypto, real password vault creation, failed storage recovery, export/import backup.
+- [ ] P0 APK release signing: user-safe update with existing data, never uninstall current app for ephemeral debug build.
