@@ -20,7 +20,13 @@ class EveryAssessmentReportUiTest {
         val all = AssessmentCatalog.modules
         assertTrue("Survey catalogue unexpectedly empty", all.isNotEmpty())
         val current = mutableStateOf(all.first())
-        val answerState = mutableStateOf<Map<String, Int>>(emptyMap())
+        // Initialize the first module with the same saved partial answers a real
+        // user would have on opening. rememberSaveable does not auto-rebase an
+        // already-opened cursor when answers change under the same module id.
+        val initial = all.first().questions.dropLast(1).associate {
+            it.id to if (all.first().evidenceBased) 2 else 3
+        }
+        val answerState = mutableStateOf<Map<String, Int>>(initial)
         compose.setContent {
             MaterialTheme {
                 SurveyScreen(
