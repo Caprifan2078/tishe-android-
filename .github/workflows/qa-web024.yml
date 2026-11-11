@@ -1,8 +1,8 @@
-name: QA Tishe Web 0.2.4 integrity and dedup
+name: QA Tishe Web 0.2.5 results and data safety
 on:
   push:
-    branches: ['qa/web024-quality-dedup-20261105']
-    paths: ['index.html', '.github/workflows/qa-web024.yml', 'docs/WEB024_QUALITY_QA_RU.md']
+    branches: ['qa/web025-results-20261111']
+    paths: ['index.html', '.github/workflows/qa-web024.yml', 'docs/WEB024_QUALITY_QA_RU.md', 'docs/WEB025_RESULTS_QA_RU.md']
   workflow_dispatch:
 permissions:
   contents: read
@@ -20,7 +20,7 @@ jobs:
           from pathlib import Path
           s=Path('index.html').read_text(encoding='utf-8')
           assert s.startswith('<!DOCTYPE html>')
-          assert 'Web 0.2.4' in s
+          assert 'Web 0.2.5' in s
           assert s.count('<script')==s.count('</script>')
           b=re.search(r'<script type="application/json" id="tishe-data">(.*?)</script>',s,re.S)
           assert b, 'Cannot find original question bank'
@@ -42,6 +42,11 @@ jobs:
           assert "const VAULT_KEY='tishe_web_v1_encrypted'" in s
           assert 'structuredClone(value):JSON.parse(JSON.stringify(value))' in s
           assert "application/json" in s and 'AES-GCM' in s
+          assert "assessmentBusy=true" in s
+          assert "if(!await setAnswer(qid,v))" in s
+          assert "await persist();" in s
+          assert "Для этого результата нужно ответить на все вопросы." in s
+          assert "modules:DATA.modules.length,moduleIds:" in s
           Path('/tmp/tishe-qa.js').write_text(re.findall(r'<script>\s*(.*?)\s*</script>',s,re.S)[-1],encoding='utf-8')
           print('PASS: 504 questions, 48 modules, routes 40/150/300/500, 18 axes, 6 stories, 9 dialogues, vault guard, one compass')
           PY
@@ -50,7 +55,7 @@ jobs:
       - name: Publish offline QA HTML artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Tishe-Web-0.2.4-quality-QA
+          name: Tishe-Web-0.2.5-results-QA
           path: index.html
           if-no-files-found: error
           retention-days: 30
