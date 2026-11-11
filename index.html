@@ -48,7 +48,7 @@
 const DATA=JSON.parse(document.getElementById('tishe-data').textContent);
 const MODULES=Object.fromEntries(DATA.modules.map(m=>[m.id,m]));
 const QUESTIONS=Object.fromEntries(DATA.modules.flatMap(m=>m.questions.map(q=>[q.id,{...q,module:m.id}])));
-const APP_VERSION='Web 0.2.4 • надёжное сохранение и единый компас';
+const APP_VERSION='Web 0.2.5 • надёжное сохранение и единый компас';
 const VAULT_KEY='tishe_web_v1_encrypted';
 const A=['anxiety','anger','sadness','apathy','thoughts','stress'];
 const NAMES={anxiety:'тревогой и беспокойством',anger:'раздражением и гневом',sadness:'грустью и подавленным настроением',apathy:'энергией и мотивацией',thoughts:'повторяющимися мыслями и проверками',stress:'стрессом и перегрузкой'};
@@ -63,7 +63,7 @@ const SCALE_LABELS=['Совсем нет','Редко','Иногда','Част�
 const clone=value=>typeof window.structuredClone==='function'?window.structuredClone(value):JSON.parse(JSON.stringify(value));
 const now=()=>new Date().toLocaleString('ru-RU',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 const initial=()=>({version:1,answers:{},feelings:{},snapshots:[],diary:[],favorites:[],practicesDone:[],prefs:{autoNext:true,theme:'dark'},created:Date.now()});
-let state=initial(),session='locked',key=null,salt=null,vault=null,storageOK=true,writeQueue=Promise.resolve(),activePage='home',isResetting=false,saveStatus='Защищено',isSaving=false;
+let state=initial(),session='locked',key=null,salt=null,vault=null,storageOK=true,writeQueue=Promise.resolve(),activePage='home',isResetting=false,saveStatus='Защищено',isSaving=false,assessmentBusy=false;
 let ui={route:'home',level:'40',module:'anxiety',idx:0,surveysGroup:'all',surveyTerm:'',practiceTerm:'',practiceFilter:'all',diaryTerm:'',diaryEdit:null,draft:'',story:null,storyPick:null,dialog:null,dialogStep:0,dialogPick:null,practice:null,unlockMode:'unlock',importPending:null,phqApproved:false,autoforward:null,mobileMore:false};
 const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
 const E=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -102,12 +102,12 @@ function persist(){
  catch(e){session=previous.session;key=previous.key;salt=previous.salt;vault=previous.vault;throw e}
  toast('Защищённое хранилище создано. Сохрани резервную копию.');render()}
 async function unlockVault(password){if(!hasCrypto())throw Error('Невозможно открыть локальное защищённое хранилище');const m=JSON.parse(localStorage.getItem(VAULT_KEY)||'null');if(!m)throw Error('Хранилище не найдено');const s=base64Bytes(m.salt);const k=await derive(password,s);let payload;try{payload=await decryptPayload(m,k)}catch{throw Error('Пароль неверный или резервная копия повреждена')}state=normalizeState(payload);salt=s;key=k;session='vault';vault=m;saveStatus='Сохранено';render();toast('Защищённые данные открыты')}
-function startDemo(){state=initial();session='demo';key=null;ui.route='home';render();toast('Демо: данные не сохраняются после закрытия страницы')}
-function lockVault(){key=null;salt=null;state=initial();session='locked';ui.route='home';render()}
+function startDemo(){assessmentBusy=false;state=initial();session='demo';key=null;ui.route='home';render();toast('Демо: данные не сохраняются после закрытия страницы')}
+function lockVault(){assessmentBusy=false;key=null;salt=null;state=initial();session='locked';ui.route='home';render()}
 function exportVault(){if(session!=='vault'){toast('Сначала создай защищённое хранилище',true);return}persist().then(()=>{const saved=localStorage.getItem(VAULT_KEY);if(saved){download(new Blob([saved],{type:'application/json'}),'Tishe-encrypted-backup-'+new Date().toISOString().slice(0,10)+'.json');toast('Зашифрованная резервная копия создана')}})}
 function download(blob,filename){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=filename;a.style.display='none';document.body.append(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},60000)}
 function applyTheme(){document.documentElement.dataset.theme=state.prefs.theme}
-function route(name,opts={}){if(ui.autoforward)clearTimeout(ui.autoforward);ui={...ui,...opts,route:name,autoforward:null,mobileMore:false};render();window.scrollTo(0,0)}
+function route(name,opts={}){if(assessmentBusy)return;if(ui.autoforward)clearTimeout(ui.autoforward);ui={...ui,...opts,route:name,autoforward:null,mobileMore:false};render();window.scrollTo(0,0)}
 function consent(){if(session==='locked')return;ui.phqApproved=true;render()}
 const totalAnswers=()=>Object.values(state.answers).filter(v=>valid(v)).length;
 function answeredRoute(level,answers=state.answers){const q=DATA.routes[level];return q.reduce((sum,id)=>sum+(valid(answers[id])?1:0),0)}
@@ -115,7 +115,22 @@ function answeredModule(mod,answers=state.answers){return mod.questions.reduce((
 function firstMissing(qids){return Math.max(0,qids.findIndex(id=>getA(id)===null))}
 function openJourney(level){if(!DATA.routes[level])return;ui.level=level;ui.idx=firstMissing(DATA.routes[level]);const count=answeredRoute(level);route(count===DATA.routes[level].length?'report':'journey',{level,idx:ui.idx})}
 function openModule(mid){const mod=MODULES[mid];if(!mod)return;ui.module=mid;ui.idx=Math.max(0,mod.questions.findIndex(q=>getA(q.id)===null));if(mid==='phq4'){ui.phqApproved=false;route('module',{module:mid,idx:ui.idx});return}route(answeredModule(mod)===mod.questions.length?'module-report':'module',{module:mid,idx:ui.idx})}
-function setAnswer(qid,val){if(isResetting)return;const q=QUESTIONS[qid];if(!q||!valid(val,q.module==='phq4'?3:4))return;state.answers[qid]=val;persist()}
+async function setAnswer(qid,val){
+ if(isResetting||assessmentBusy)return false;
+ const q=QUESTIONS[qid];if(!q||!valid(val,q.module==='phq4'?3:4))return false;
+ const previous=state.answers[qid],hadPrevious=Object.prototype.hasOwnProperty.call(state.answers,qid);
+ assessmentBusy=true;
+ try{
+  state.answers[qid]=val;
+  // Do not acknowledge an answer until the encrypted snapshot has been stored.
+  await persist();
+  return true;
+ }catch(error){
+  if(hadPrevious)state.answers[qid]=previous;else delete state.answers[qid];
+  toast('Ответ не сохранился. Проверь хранилище и повтори попытку.',true);
+  return false;
+ }finally{assessmentBusy=false}
+}
 function setFeeling(fid,v){if(isResetting||!DATA.axes.some(a=>a.id===fid)||!valid(v,5))return;state.feelings[fid]=v;persist()}
 function statFor(id,answers=state.answers,subset=null){const q=MODULES[id]?.questions.filter(x=>!subset||subset.includes(x.id))||[];const values=q.map(x=>answers[x.id]).filter(v=>valid(v));const required=Math.max(2,Math.ceil(q.length*.7));return {id,title:MODULES[id]?.title||id,count:values.length,total:q.length,ready:values.length>=required,avg:values.length>=required?values.reduce((a,b)=>a+b,0)/values.length:null,high:values.filter(v=>v>=3).length,sometimes:values.filter(v=>v===2).length,low:values.filter(v=>v<=1).length,items:q.filter(x=>valid(answers[x.id])&&answers[x.id]>=3).sort((a,b)=>answers[b.id]-answers[a.id])}}
 function ipip(m,answers=state.answers){if(m.kind!=='ipip'||m.questions.some(q=>!valid(answers[q.id])))return null;return m.questions.reduce((n,q)=>n+(q.reverse?4-answers[q.id]:answers[q.id]),0)/m.questions.length}
@@ -132,7 +147,7 @@ function singleReport(mod,answers=state.answers){const entries=mod.questions.fil
  if(mod.id==='phq4'){
    if(count<4)return {head:'PHQ-4 пока не завершён',because:`Отвечено ${count} из 4; для скрининга нужны все четыре пункта.`,step:'Заверши опрос.',texts:[],count,total};
    const sum=entries.reduce((n,q)=>n+answers[q.id],0),a=answers['phq4.1']+answers['phq4.2'],b=answers['phq4.3']+answers['phq4.4'];
-   const label=sum>=9?'выраженная':sum>=6?'умеренная':sum>=3?'лёгкая':'минимальная';head=`PHQ-4: ${label} выраженность отмеченных симптомов.`;because=`Сумма ${sum} из 12; тревожные симптомы ${a}/6, настроение ${b}/6. Это скрининг, а не диагноз.`;step=sum>=6||a>=3||b>=3?'Результат и его влияние на жизнь стоит обсудить со специалистом.':'Если переживания мешают, за поддержкой можно обращаться при любом балле.';return {head,because,step,texts:[],count,total,phq:sum};
+   const label=sum>=9?'высокий':sum>=6?'умеренный':sum>=3?'низкий':'минимальный';head=`PHQ-4: ${label} суммарный балл отмеченных симптомов.`;because=`Сумма ${sum} из 12; тревожные симптомы ${a}/6, настроение ${b}/6. Это скрининг, а не диагноз.`;step=sum>=6||a>=3||b>=3?'Результат и его влияние на жизнь стоит обсудить со специалистом.':'Если переживания мешают, за поддержкой можно обращаться при любом балле.';return {head,because,step,texts:[],count,total,phq:sum};
  }
  if(mod.kind==='ipip'){
    const n=ipip(mod,answers);if(n===null)return{head:'Самоописание ещё не завершено',because:`Нужно ответить на все ${total} вопросов, чтобы учесть обратные утверждения.`,step:'Заверши опрос.',texts:[],count,total};
@@ -247,7 +262,7 @@ function dialogsPage(){return `${intro('Лаборатория диалогов'
 function dialogPage(){const s=DATA.dialogs.find(s=>s.id===ui.dialog);if(!s)return dialogsPage();const step=clamp(ui.dialogStep,0,s.moments.length-1),m=s.moments[step],pick=ui.dialogPick;return `${intro('Диалоги',E(s.title),E(s.scenario),button('← Все сценарии','navigate',{attr:'data-to="dialogs"'}))}<div class="question-shell"><div class="card"><div class="row between"><span class="pill">Шаг ${step+1} из ${s.moments.length}</span><span class="card-emoji" style="margin:0">${E(s.emoji)}</span></div><h3 class="mt16">${E(m.context)}</h3><p class="muted mt8">${E(m.question)}</p><div class="mt16">${m.options.map((o,i)=>`<button class="story-choice" data-action="dialog-choice" data-index="${i}" aria-pressed="${pick===i}">${E(o.text)}</button>`).join('')}</div>${Number.isInteger(pick)&&m.options[pick]?`<div class="story-feedback"><strong>Возможная перспектива</strong><p>${E(m.options[pick].perspective)}</p><strong style="display:block;margin-top:10px">Что попробовать</strong><p>${E(m.options[pick].next)}</p></div>`:''}<div class="btn-row mt20"><button class="btn" data-action="dialog-prev" ${step===0?'disabled':''}>← Предыдущий</button><button class="btn btn-primary" data-action="dialog-next">${step===2?'Завершить':'Следующий шаг →'}</button></div></div></div>`}
 function supportPage(){return `${intro('Когда нужна помощь','Поддержка и безопасность','Приложение не заменяет близких людей, профессиональную помощь или экстренные службы.') }<div class="grid2"><div class="card"><div class="card-emoji">♡</div><h2>Когда тяжело</h2><p class="muted mt12">Можно обратиться к человеку, которому доверяешь, или к специалисту. Для этого необязательно иметь «высокий балл» теста.</p><div class="divider"></div><h3>Небольшой доступный шаг</h3><p class="muted mt8">Напиши человеку коротко: «Мне сейчас непросто. Можешь немного побыть рядом или поговорить?»</p></div><div class="card"><div class="card-emoji">✧</div><h2>Если есть непосредственная опасность</h2><p class="muted mt12">Перейди в безопасное место и обратись в местные экстренные службы или к человеку рядом. Не полагайся на подсказки приложения в экстренной ситуации.</p><div class="callout warn mt16">Телефон экстренной помощи зависит от страны. Если ты в ЕС, действует 112; в других местах уточни местный номер.</div></div></div><div class="card mt16"><h3>Важно о результатах тестов</h3><p class="muted mt8">Тесты 40–500 и большинство тематических блоков разработаны для самонаблюдения и не прошли клиническую валидацию. PHQ-4 — отдельный краткий скрининг, его результат не является диагнозом. Если состояние мешает жить, обратись за помощью независимо от результата.</p></div>`}
 function settingsPage(){const protectedMode=session==='vault';return `${intro('Контроль и приватность','Настройки','Твои данные, оформление и резервные копии — под твоим контролем.') }<div class="grid2"><div class="card"><h3>Внешний вид</h3><div class="btn-row mt16"><button class="btn ${state.prefs.theme==='dark'?'btn-primary':''}" data-action="set-theme" data-mode="dark">☾ Тёмная</button><button class="btn ${state.prefs.theme==='light'?'btn-primary':''}" data-action="set-theme" data-mode="light">☀ Светлая</button></div><div class="divider"></div><label class="row"><input type="checkbox" id="auto-next-setting" ${state.prefs.autoNext?'checked':''}> Автоматически открывать следующий вопрос после выбора ответа</label></div><div class="card"><h3>${protectedMode?'🔐 Защищённое хранилище':'Демонстрационный режим'}</h3><p class="muted mt12">${protectedMode?'Данные шифруются AES-GCM с ключом, полученным из пароля через PBKDF2. Пароль не хранится.':'Данные этого сеанса не сохраняются после закрытия страницы. Их можно перенести в защищённое хранилище, пока страница открыта.'}</p><div class="column gap12 mt16">${protectedMode?`${button('Скачать зашифрованную копию','export',{primary:true})}${button('Заблокировать приложение','lock')}`:`${hasCrypto()?button('🔒 Включить хранение с паролем','setup',{primary:true}):'<p class="muted">Защищённое хранилище здесь недоступно.</p>'}`}${button('Восстановить копию','import')}</div></div><div class="card"><h3>Что хранится</h3><ul class="list-clean mt12"><li>Ответы: <strong>${totalAnswers()}</strong></li><li>Отметки чувств: <strong>${Object.keys(state.feelings).length}</strong></li><li>История компаса: <strong>${state.snapshots.length}</strong></li><li>Записи дневника: <strong>${state.diary.length}</strong></li><li>Избранные практики: <strong>${state.favorites.length}</strong></li></ul><div class="callout mt16">Хранилище привязано к этому браузеру и расположению файла. При очистке данных браузера записи могут исчезнуть. Не удаляй резервную копию.</div></div><div class="card"><h3>Сброс данных</h3><p class="muted mt12">Удаление необратимо без резервной копии. Оно не затрагивает Android-приложение «Тише».</p><div class="mt20">${button('Удалить все данные','reset',{attr:'style="color:var(--danger)"'})}</div><div class="divider"></div><p class="small muted">HTML-адаптация, не оригинальный Android APK. Воспроизводит банк из 504 вопросов, 18 чувств, оригинальные истории и диалоги. Не использует сеть, рекламу и аналитические сервисы.</p></div></div>`}
-async function execute(action,el){if(isResetting)return;const level=ui.level,mod=MODULES[ui.module],isJ=ui.route==='journey',routeIds=isJ?DATA.routes[level]:mod?.questions.map(q=>q.id);
+async function execute(action,el){if(isResetting||assessmentBusy)return;const level=ui.level,mod=MODULES[ui.module],isJ=ui.route==='journey',routeIds=isJ?DATA.routes[level]:mod?.questions.map(q=>q.id);
 switch(action){
  case 'demo':startDemo();break;
  case 'setup':if(storageOK&&localStorage.getItem(VAULT_KEY)){toast('Защищённое пространство уже существует. Открой его; создание нового поверх прежнего заблокировано.',true);return}ui.oldSession=session;ui.unlockMode='create';session='locked';render();break;
@@ -260,7 +275,24 @@ switch(action){
  case 'open-journey':openJourney(el.dataset.level);break;
  case 'open-module':openModule(el.dataset.mid);break;
  case 'confirm-adult':ui.phqApproved=true;if(answeredModule(mod)===mod.questions.length)route('module-report');else render();break;
- case 'answer':{const qid=el.dataset.qid,v=Number(el.dataset.value);setAnswer(qid,v);const idx=ui.idx;render();if(state.prefs.autoNext){ui.autoforward=setTimeout(()=>{if(['journey','module'].includes(ui.route)&&ui.idx===idx)moveQuestion(1)},210)}break}
+ case 'answer':{
+  const qid=el.dataset.qid,v=Number(el.dataset.value),idx=ui.idx;
+  const locationBefore=ui.route,levelBefore=ui.level,moduleBefore=ui.module;
+  if(!await setAnswer(qid,v)){render();break}
+  const samePage=ui.route===locationBefore&&ui.idx===idx&&ui.level===levelBefore&&ui.module===moduleBefore;
+  if(!samePage){render();break}
+  const currentIds=locationBefore==='journey'?DATA.routes[levelBefore]:MODULES[moduleBefore].questions.map(q=>q.id);
+  const finished=locationBefore==='journey'?answeredRoute(levelBefore)===currentIds.length:answeredModule(MODULES[moduleBefore])===currentIds.length;
+  // Always show a completed result after the final confirmed answer.
+  if(idx===currentIds.length-1&&finished){route(locationBefore==='journey'?'report':'module-report');break}
+  render();
+  if(state.prefs.autoNext){
+    ui.autoforward=setTimeout(()=>{
+      if(!assessmentBusy&&['journey','module'].includes(ui.route)&&ui.idx===idx)moveQuestion(1)
+    },210);
+  }
+  break;
+ }
  case 'next-question':moveQuestion(1);break;
  case 'prev-question':moveQuestion(-1);break;
  case 'skip-question':moveQuestion(1);break;
@@ -311,7 +343,23 @@ switch(action){
  }
  default:console.warn('Unknown action',action)
 }}
-function moveQuestion(step){const isJ=ui.route==='journey';if(!isJ&&!(['module'].includes(ui.route)))return;const routeIds=isJ?DATA.routes[ui.level]:MODULES[ui.module].questions.map(q=>q.id);const next=ui.idx+step;if(next<0)return;if(next>=routeIds.length){route(isJ?'report':'module-report');return}ui.idx=next;render();window.scrollTo(0,0)}
+function moveQuestion(step){
+ if(assessmentBusy)return;
+ const isJ=ui.route==='journey';if(!isJ&&ui.route!=='module')return;
+ const mod=isJ?null:MODULES[ui.module];
+ const routeIds=isJ?DATA.routes[ui.level]:mod.questions.map(q=>q.id);
+ const next=ui.idx+step;if(next<0)return;
+ if(next>=routeIds.length){
+  const count=isJ?answeredRoute(ui.level):answeredModule(mod);
+  if(!count){toast('Нужно ответить хотя бы на один вопрос, чтобы получить результат.',true);ui.idx=firstMissing(routeIds);render();return}
+  if(!isJ&&(mod.id==='phq4'||mod.kind==='ipip')&&count<routeIds.length){
+   toast('Для этого результата нужно ответить на все вопросы.',true);
+   ui.idx=firstMissing(routeIds);render();return;
+  }
+  route(isJ?'report':'module-report');return;
+ }
+ ui.idx=next;render();window.scrollTo(0,0)
+}
 function importBackup(){
  const inp=document.createElement('input');inp.type='file';inp.accept='.json,application/json';
  inp.onchange=async()=>{try{
@@ -339,12 +387,12 @@ function refreshCards(){if(ui.route==='tests'){const el=$('#survey-cards');if(el
 document.addEventListener('click',e=>{const el=e.target.closest('[data-action]');if(!el)return;e.preventDefault();if(el.disabled)return;execute(el.dataset.action,el).catch(error=>{console.error(error);toast('Ошибка: '+(error?.message||'Не удалось выполнить действие'),true)})});
 document.addEventListener('input',e=>{const el=e.target;if(el.id==='survey-search'){ui.surveyTerm=el.value;refreshCards()}if(el.id==='practice-search'){ui.practiceTerm=el.value;refreshCards()}if(el.id==='diary-search'){ui.diaryTerm=el.value;refreshCards()}if(el.id==='diary-text')ui.draft=el.value;if(el.matches('[data-feeling]')){const output=document.getElementById('value-'+el.dataset.feeling);if(output)output.textContent=el.value}});
 document.addEventListener('change',e=>{const el=e.target;if(el.id==='survey-filter'){ui.surveysGroup=el.value;refreshCards()}if(el.id==='practice-filter'){ui.practiceFilter=el.value;refreshCards()}if(el.matches('[data-feeling]')){setFeeling(el.dataset.feeling,Number(el.value));render()}if(el.id==='auto-next'||el.id==='auto-next-setting'){state.prefs.autoNext=el.checked;persist()} });
-document.addEventListener('keydown',e=>{if(e.key==='Enter'&&session==='locked'&&document.activeElement?.id==='pass')execute('unlock',document.getElementById('unlock-btn')||document.body);if(e.key==='Escape'&&['journey','module','report','module-report'].includes(ui.route))route('tests')});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&session==='locked'&&document.activeElement?.id==='pass')execute('unlock',document.getElementById('unlock-btn')||document.body);if(e.key==='Escape'&&!assessmentBusy&&['journey','module','report','module-report'].includes(ui.route))route('tests')});
 function init(){storageOK=storage();applyTheme();try{if(storageOK&&localStorage.getItem(VAULT_KEY)){const obj=JSON.parse(localStorage.getItem(VAULT_KEY));if(obj?.format!=='TisheWebEncryptedBackup')toast('Защищённое хранилище имеет неизвестный формат',true)}}catch{toast('Не удалось прочитать метаданные хранилища',true)}render()}
 window.addEventListener('unhandledrejection',e=>{console.error('Unhandled promise rejection',e.reason);toast('Возникла ошибка. Проверь сохранение.',true)});
 window.addEventListener('error',e=>{console.error('Application error',e.message);toast('Ошибка приложения: '+e.message,true)});
 // Deterministic pure read-only QA probes, enabled only by explicit ?tishe_qa=1.
-if(location.search.includes('tishe_qa=1'))window.__TISHE_QA__=Object.freeze({routes:DATA.routes,modules:DATA.modules.length,report:(level,answers)=>sentenceReport(level,answers),single:(mid,answers)=>singleReport(MODULES[mid],answers),getSession:()=>session,getState:()=>clone(state)});
+if(location.search.includes('tishe_qa=1'))window.__TISHE_QA__=Object.freeze({routes:DATA.routes,modules:DATA.modules.length,moduleIds:DATA.modules.map(m=>m.id),moduleQuestions:Object.fromEntries(DATA.modules.map(m=>[m.id,m.questions.map(q=>q.id)])),report:(level,answers)=>sentenceReport(level,answers),single:(mid,answers)=>singleReport(MODULES[mid],answers),getSession:()=>session,getState:()=>clone(state)});
 init();
 })();
 </script>
