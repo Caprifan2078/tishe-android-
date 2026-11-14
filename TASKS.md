@@ -66,3 +66,12 @@
 - [ ] P0 stable APK signing, verify safe in-place update of an existing real installation; never uninstall user's old data.
 - [ ] P1 test with real full storage/slow physical flash and process killed during fsync; confirm recovery UX on devices with differing Android Settings labels.
 - [ ] P1 backup/export integrity and Safari browser secure-context behavior. No Android↔HTML personal-data sync exists.
+
+## QA 2026-11-15: fast questionnaire UX and compass
+- [x] Fix confusing empty chart after 40 answers: display **automatically filled six measured survey domains** before 18 separate *manual current* feelings. Never synthesize 18 real-time ratings from 40 retrospective questions.
+- [x] Introduce opt-in one-tap quick mode on standalone surveys and all four journeys; advance only on observed saved acknowledgment (not on initial touch), no repeat-tap double-skip.
+- [x] Condense questionnaire text and default result screen; keep evidence and explanations accessible under "Подробнее".
+- [x] 25/25 Android emulator tests + successful standard/preview Android CI, `43653818900`/`43653818847`/`43653818950`.
+- [ ] Manual physical-device stress of very fast interaction on slow storage, process restarts and service disruptions.
+- [ ] P0 stable signing / safe in-place app update; never uninstall old personal data.
+- [ ] Product decision: whether to offer a separate optional 18-item "how I feel today" check-in directly after a long survey; NEVER silently infer them from retrospective scores.

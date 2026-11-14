@@ -59,3 +59,9 @@
 - Scoped `StartupState.Failed` to a typed unconfirmed-write case. Startup cancellation is no longer swallowed. Failure screen provides App Info and force-stop/reopen instructions, explicitly forbids clearing/deleting personal data, preserves quick/emergency support, and keeps ordinary retry available for other read failures.
 - QA-only branch `qa/recovery-after-failed-write-20261115`, PR #15; no data schema, AES/Keystore, app identity or main changes.
 - Full CI regular/preview SUCCESS (`43650120958` / `43650120961`), JUnit 130/130, Lint 0 errors; Android emulator `43650120951` SUCCESS, 20/20 including new error/recreation test.
+
+## 2026-11-15 — fast confirmed-save answers, compact results and honest compass charts
+- Added optional quick answer mode across 40/150/300/500 and individual surveys; one selection advances after confirmed persistence, eliminating manual Next step without double advance or unconfirmed UI.
+- On compass after 40 answered, display six actual calculated questionnaire domains first. Separate 18-feeling NOW ratings remain voluntary and are not falsely populated from last-week questions.
+- Result explanation collapsed under "Подробнее", question/result repeated disclaimers shortened. Existing narrative/evidence remains accessible.
+- QA-only PR #17; regular/preview builds PASS, 25/25 Pixel 6 API35 emulator PASS, 5 new UI tests. APK `Tishe-v027-FAST-Compass-QA.apk`, SHA256 `5a98f2f7a72b1a0a9d1512090629889ea59868f6faf6eb4e42a8de6a9e12f6fa`.
