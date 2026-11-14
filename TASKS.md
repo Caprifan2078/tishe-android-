@@ -51,3 +51,11 @@
 - [ ] Android QA: delay the real IO commit, tap rapidly, rotate/recreate in the middle of saving; verify no acknowledged answer disappears and later action is not silently lost. Needs targeted real app regression.
 - [ ] iPhone Safari: offline file vs HTTPS crypto, real password vault creation, failed storage recovery, export/import backup.
 - [ ] P0 APK release signing: user-safe update with existing data, never uninstall current app for ephemeral debug build.
+
+## P1 checkpoint 2026-11-15: save/recreate race
+- [x] Process-lifetime FIFO IO writes survive Compose Activity recreation; new startup waits pending writes. Commit `31c707a0bb7926172518715c2efddbfe9535df2b` in QA, PR #14 draft.
+- [x] Unit + instrumentation: 130/130 JUnit, 19/19 Android emulator (including all 48 survey conclusions and all four journey reports); Lint 0 errors. CI `43649120359` / `43649120309` / `43649120280`.
+- [ ] P0: establish stable signing key / ownership and verify non-destructive upgrade path for existing installations.
+- [ ] P1: test process death during fsync and slow physical flash; Android TalkBack, large text, low-end devices.
+- [ ] P1: improve recovery UX when `AssessmentWriteCoordinator` blocks a fresh Activity after a failed, unconfirmed commit; never misreport RAM-only data as durable.
+- [ ] P1: browser Safari backup import/export and secure-context behavior.
