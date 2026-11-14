@@ -189,10 +189,8 @@ s = replace_once(s,
     'internal fun QuestionnaireNarrativeCard(result: QuestionnaireNarrative, conclusion: DirectTestConclusion) {\n    var showDetails by remember { mutableStateOf(false) }\n    SoftCard',
     "narrative fold state")
 s = replace_once(s,
-    '''        Text(conclusion.nextStep, fontSize = 13.sp, lineHeight = 19.sp)
-        if (result.evidence.isNotEmpty()) {''',
-    '''        Text(conclusion.nextStep, fontSize = 13.sp, lineHeight = 19.sp)
-        TextButton(onClick = { showDetails = !showDetails }) {
+    '        if (result.evidence.isNotEmpty()) {',
+    '''        TextButton(onClick = { showDetails = !showDetails }) {
             Text(if (showDetails) "Скрыть объяснения" else "Подробнее: почему такой результат")
         }
         if (showDetails) {
