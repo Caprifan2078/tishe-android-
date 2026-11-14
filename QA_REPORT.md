@@ -91,3 +91,10 @@
 - Emulator `43649120280` SUCCESS, UTP XML `TEST-emulator-5554 - 15-_app-.xml` parsed from artifact `14135517510`, 19 tests, 0 failures/errors/skips, ~67.8sec. All previous 15 Android tests retained (48 individual survey module UI results and four journeys).
 - Preview artifact `14134839072`: SHA-256 `027c29dc89dbb43da324b643e66757bdb7b408281f220812b0ef2cff44626750`, 11,115,649 bytes; package `ru.tishe.app.results27`. Physical flash and process kill during fsync not tested.
 - Limit: delayed write used in recreation test is synthetic; real storage unit smoke and failure injection remain separately tested. Sticky error barrier intentionally favors preventing unconfirmed data from being displayed; a process restart can be needed after a failed write if no retry is possible. Need UX review. DO NOT overwrite/delete old installed app with mismatched signature.
+
+## Failed-commit recovery screen QA — 2026-11-15
+- Commit `9227e747e5944805364e3930b31ccf82529dc342`: `UnconfirmedAssessmentWriteException` instead of generic IllegalStateException for startup barrier; safe Activity recovery text, Android App Info intent; no false retry loop for unconfirmed write, existing support actions preserved.
+- Android CI https://github.com/Caprifan2078/tishe-android-/actions/runs/43650120951 — SUCCESS. Artifact `14135857268`, UTP XML: **20 tests, 0 failures, 0 errors, 0 skips**. `AssessmentFailedWriteRecoveryUiTest.unconfirmedWriteShowsActionableRecoveryWithoutInfiniteRetry` passed in 5.409 sec.
+- Regular https://github.com/Caprifan2078/tishe-android-/actions/runs/43650120958 — SUCCESS. Preview https://github.com/Caprifan2078/tishe-android-/actions/runs/43650120961 — SUCCESS. JUnit report: 130 tests, 0 failures/ignored; Lint 0 errors, 4 warnings.
+- Preview APK artifact `14135583978` verified ZIP CRC PASS, AndroidManifest present, 11,115,649 bytes, SHA256 `48bec284821ebf51cadc5694502df06d6143feb31d7bf2cdf324e0529b30161c`; `ru.tishe.app.results27` / v0.27.0/code34.
+- Synthetic failure injection only; no physical phone IO failure test or guarantee that stopping/restarting will repair storage damage. Old app's data is not migrated. Test uses no personal data.

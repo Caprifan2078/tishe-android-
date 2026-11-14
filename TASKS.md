@@ -59,3 +59,10 @@
 - [ ] P1: test process death during fsync and slow physical flash; Android TalkBack, large text, low-end devices.
 - [ ] P1: improve recovery UX when `AssessmentWriteCoordinator` blocks a fresh Activity after a failed, unconfirmed commit; never misreport RAM-only data as durable.
 - [ ] P1: browser Safari backup import/export and secure-context behavior.
+
+## QA 2026-11-15: failed-write recovery UX
+- [x] Distinguish unconfirmed durable save from normal read failure; prevent misleading in-process Retry loop, offer Android settings and no-delete guidance while preserving offline help.
+- [x] Real Activity UI regression with synthetic `commit=false`: 20/20 emulator PASS, 130/130 JUnit, Lint 0 errors. CI `43650120951`, `43650120958`, `43650120961`.
+- [ ] P0 stable APK signing, verify safe in-place update of an existing real installation; never uninstall user's old data.
+- [ ] P1 test with real full storage/slow physical flash and process killed during fsync; confirm recovery UX on devices with differing Android Settings labels.
+- [ ] P1 backup/export integrity and Safari browser secure-context behavior. No Android↔HTML personal-data sync exists.

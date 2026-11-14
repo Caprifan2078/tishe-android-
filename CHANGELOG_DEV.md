@@ -54,3 +54,8 @@
 - Kept existing encryption, package identity, app version, durable commit and all 48+4 assessment conclusions. No changes to `main`.
 - GitHub CI regular/preview `43649120359`/`43649120309` SUCCESS; 130/130 JUnit; Android Lint 0 errors, 4 warnings; emulator `43649120280` SUCCESS 19/19 with four new concurrency/recreation regression tests.
 - QA APK `Tishe-v0.27.0-rotation-safe-QA.apk` SHA256 `027c29dc89dbb43da324b643e66757bdb7b408281f220812b0ef2cff44626750`. Remains QA only due signing and physical-device blockers.
+
+## 2026-11-15 — no infinite restart loop after unconfirmed encrypted save
+- Scoped `StartupState.Failed` to a typed unconfirmed-write case. Startup cancellation is no longer swallowed. Failure screen provides App Info and force-stop/reopen instructions, explicitly forbids clearing/deleting personal data, preserves quick/emergency support, and keeps ordinary retry available for other read failures.
+- QA-only branch `qa/recovery-after-failed-write-20261115`, PR #15; no data schema, AES/Keystore, app identity or main changes.
+- Full CI regular/preview SUCCESS (`43650120958` / `43650120961`), JUnit 130/130, Lint 0 errors; Android emulator `43650120951` SUCCESS, 20/20 including new error/recreation test.
