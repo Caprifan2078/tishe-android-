@@ -24,6 +24,9 @@ on:
       - 'scripts/apply-qa-assessment-offmain.py'
       - 'scripts/AssessmentAsyncWriter.kt'
       - 'scripts/AssessmentAsyncWriterTest.kt'
+      - 'scripts/AssessmentWriteCoordinator.kt'
+      - 'scripts/AssessmentWriteCoordinatorTest.kt'
+      - 'scripts/apply-qa-assessment-recreation.py'
       - 'scripts/AssessmentDurableDiskSmokeTest.kt'
       - 'scripts/AssessmentResumePositionTest.kt'
       - 'scripts/AssessmentResultEntryPolicy.kt'
@@ -105,6 +108,8 @@ jobs:
         run: python3 scripts/apply-qa-assessment-durable.py
       - name: Move confirmed questionnaire saves off main thread
         run: python3 scripts/apply-qa-assessment-offmain.py
+      - name: Keep accepted questionnaire IO alive across Android recreation
+        run: python3 scripts/apply-qa-assessment-recreation.py
       - name: Make preview installable alongside older debug builds
         shell: bash
         run: |
