@@ -1,7 +1,7 @@
 package ru.tishe.app
 
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import java.util.Collections
 import java.util.concurrent.CountDownLatch
