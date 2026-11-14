@@ -48,3 +48,9 @@
 ## 2026-11-11 — full Android report QA and HTML 0.2.5
 - Added Android QA-only Compose test across all 48 survey modules and 4 journey modes. Initial setup false-positive corrected (same module initially opened with no answers); rerun success 15/15 on API35 emulator, CI 43013180435. No Android application code or data changes.
 - Separate web QA 0.2.5 branch: wait for encryption before navigation, suppress overlapping input, show result on last complete answer and reject premature PHQ-4/IPIP completion; 48+4 UI coverage in local Chromium and green static GitHub workflow 43013436451. Web and Android remain independent local stores.
+
+## 2026-11-15 — persistent assessment write across Android rotation (QA)
+- Created `AssessmentWriteCoordinator` to register each accepted write synchronously and finish IO on a process-owned serial queue. A new Activity's initial read waits for all accepted writes and reports an error rather than accepting unconfirmed in-memory preferences.
+- Kept existing encryption, package identity, app version, durable commit and all 48+4 assessment conclusions. No changes to `main`.
+- GitHub CI regular/preview `43649120359`/`43649120309` SUCCESS; 130/130 JUnit; Android Lint 0 errors, 4 warnings; emulator `43649120280` SUCCESS 19/19 with four new concurrency/recreation regression tests.
+- QA APK `Tishe-v0.27.0-rotation-safe-QA.apk` SHA256 `027c29dc89dbb43da324b643e66757bdb7b408281f220812b0ef2cff44626750`. Remains QA only due signing and physical-device blockers.

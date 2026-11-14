@@ -79,3 +79,15 @@
 - New case `allFourJourneyFinalQuestionsOpenRealReport`: 40/150/300/500, last question answered and `К результатам` clicked; report `Твои результаты` and `Итог теста` present; passed in 6.987 seconds.
 - Previous 13 tests passed, including Android Keystore persistence and off-main slow/failed write tests. This validates real Android UI on emulator, NOT the physical phone, external accessibility, stable signing, or mid-write Activity recreation.
 - No consumer APK code changed: last verified QA debug APK `Tishe-v0.27.0-offmain-safe-save-QA.apk` (preview artifact 13721079757) still applies. APK does NOT promise in-place upgrade over a differently signed installation.
+
+## Android process-owned assessment IO and recreation — 2026-11-15
+- SHA `31c707a0bb7926172518715c2efddbfe9535df2b`. Previous off-main writer used Compose scope for the awaited IO operation, so canceled UI could race a new instance's snapshot read. New `AssessmentWriteCoordinator` registers accepted operations immediately, runs them in serial on process-owned Dispatchers.IO, and inserts a barrier before startup reads.
+- New tests in `AssessmentWriteCoordinatorTest`:
+  - `canceledUiWaiterDoesNotCancelAcceptedDiskWrite` PASS: canceled UI listener cannot abort already accepted task or falsely acknowledge it.
+  - `rapidSubmissionsAreSerializedAndLastSnapshotWins` PASS: second write never overtakes first.
+  - `failedWriteCannotBeMistakenForPersistedAnswerOnRecreate` PASS: unconfirmed write blocks fresh loads until a confirmed retry.
+  - `AssessmentWriteRecreationUiTest.recreatedActivityWaitsForPriorWriteBeforeRenderingOldState` PASS: real `MainActivity` recreation waits behind deliberately slow synthetic IO.
+- CI regular `43649120359` SUCCESS, preview `43649120309` SUCCESS, 130/130 JUnit, Lint 0 errors/4 warnings.
+- Emulator `43649120280` SUCCESS, UTP XML `TEST-emulator-5554 - 15-_app-.xml` parsed from artifact `14135517510`, 19 tests, 0 failures/errors/skips, ~67.8sec. All previous 15 Android tests retained (48 individual survey module UI results and four journeys).
+- Preview artifact `14134839072`: SHA-256 `027c29dc89dbb43da324b643e66757bdb7b408281f220812b0ef2cff44626750`, 11,115,649 bytes; package `ru.tishe.app.results27`. Physical flash and process kill during fsync not tested.
+- Limit: delayed write used in recreation test is synthetic; real storage unit smoke and failure injection remain separately tested. Sticky error barrier intentionally favors preventing unconfirmed data from being displayed; a process restart can be needed after a failed write if no retry is possible. Need UX review. DO NOT overwrite/delete old installed app with mismatched signature.
