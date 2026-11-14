@@ -27,6 +27,8 @@ on:
       - 'scripts/AssessmentWriteCoordinator.kt'
       - 'scripts/AssessmentWriteCoordinatorTest.kt'
       - 'scripts/apply-qa-assessment-recreation.py'
+      - 'scripts/apply-qa-failed-write-recovery.py'
+      - 'scripts/AssessmentFailedWriteRecoveryUiTest.kt'
       - 'scripts/AssessmentDurableDiskSmokeTest.kt'
       - 'scripts/AssessmentResumePositionTest.kt'
       - 'scripts/AssessmentResultEntryPolicy.kt'
@@ -110,6 +112,8 @@ jobs:
         run: python3 scripts/apply-qa-assessment-offmain.py
       - name: Keep accepted questionnaire IO alive across Android recreation
         run: python3 scripts/apply-qa-assessment-recreation.py
+      - name: Show safe recovery after failed encrypted answer write
+        run: python3 scripts/apply-qa-failed-write-recovery.py
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
